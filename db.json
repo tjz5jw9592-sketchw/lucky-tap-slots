@@ -1,0 +1,32 @@
+{
+  "users": {
+    "777000": {
+      "id": "777000",
+      "telegramId": 777000,
+      "username": "demo_player",
+      "firstName": "Demo",
+      "coins": 1000,
+      "energy": 500,
+      "maxEnergy": 500,
+      "tapPower": 2,
+      "luckLevel": 1,
+      "spinGoal": 60,
+      "spinProgress": 0,
+      "freeSpins": 1,
+      "minerLevel": 0,
+      "miningRate": 0,
+      "combo": 1,
+      "comboExpiresAt": 0,
+      "totalTaps": 0,
+      "totalSpins": 0,
+      "biggestWin": 0,
+      "lastEnergyAt": 1786003055368,
+      "lastClaimAt": 1786003055368,
+      "lastDailyAt": 0,
+      "lastSpinAt": 0,
+      "createdAt": 1786003055368
+    }
+  },
+  "jackpot": 25000,
+  "spins": []
+}

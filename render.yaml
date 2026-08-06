@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: lucky-tap-slots
+    runtime: node
+    plan: starter
+    buildCommand: ""
+    startCommand: node server/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: ALLOW_DEV_AUTH
+        value: "false"
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: lucky-tap-data
+      mountPath: /var/data
+      sizeGB: 1
