@@ -2,19 +2,102 @@ const express = require("express");
 const path = require("path");
 
 const app = express();
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
 
-// Pliki gry znajdują się w głównym katalogu repozytorium
-app.use(express.static(__dirname));
+let user = {
+  coins: 1000,
+  energy: 500,
+  maxEnergy: 500,
+  taps: 0,
+  spinProgress: 0
+};
 
 app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+  res.status(200).json({
+    ok: true,
+    service: "lucky-tap-slots"
+  });
 });
+
+app.get("/api/me", (req, res) => {
+  res.json(user);
+});
+
+app.post("/api/tap", (req, res) => {
+  if (user.energy > 0) {
+    user.energy -= 1;
+    user.coins += 1;
+    user.taps += 1;
+    user.spinProgress = Math.min(
+      100,
+      user.spinProgress + 1
+    );
+  }
+
+  res.json(user);
+});
+
+app.post("/api/spin", (req, res) => {
+  if (user.spinProgress < 100) {
+    return res.status(400).json({
+      error: "Lucky Spin nie jest jeszcze naładowany"
+    });
+  }
+
+  const symbols = [
+    "🍒",
+    "🍋",
+    "💎",
+    "7️⃣",
+    "⭐",
+    "🍀",
+    "🔔",
+    "🍇"
+  ];
+
+  const reels = Array.from(
+    { length: 9 },
+    () => symbols[Math.floor(Math.random() * symbols.length)]
+  );
+
+  let win = 0;
+
+  for (let row = 0; row < 3; row++) {
+    const i = row * 3;
+
+    if (
+      reels[i] === reels[i + 1] &&
+      reels[i] === reels[i + 2]
+    ) {
+      if (reels[i] === "7️⃣") {
+        win += 777;
+      } else if (reels[i] === "💎") {
+        win += 250;
+      } else {
+        win += 100;
+      }
+    }
+  }
+
+  user.coins += win;
+  user.spinProgress = 0;
+
+  res.json({
+    ...user,
+    reels,
+    win
+  });
+});
+
+// Frontend znajduje się w głównym katalogu
+app.use(express.static(__dirname));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Lucky Tap Slots działa na porcie ${PORT}`);
 });
