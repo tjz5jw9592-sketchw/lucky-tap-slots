@@ -5,6 +5,7 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+const SPIN_TARGET = 25;
 
 let user = {
   coins: 1000,
@@ -31,7 +32,7 @@ app.post("/api/tap", (req, res) => {
     user.coins += 1;
     user.taps += 1;
     user.spinProgress = Math.min(
-      100,
+      SPIN_TARGET,
       user.spinProgress + 1
     );
   }
@@ -40,9 +41,9 @@ app.post("/api/tap", (req, res) => {
 });
 
 app.post("/api/spin", (req, res) => {
-  if (user.spinProgress < 100) {
+  if (user.spinProgress < SPIN_TARGET) {
     return res.status(400).json({
-      error: "Lucky Spin nie jest jeszcze naładowany"
+      error: `Potrzebujesz ${SPIN_TARGET} tapów do Lucky Spin`
     });
   }
 
@@ -81,6 +82,10 @@ app.post("/api/spin", (req, res) => {
     }
   }
 
+  if (win === 0) {
+    win = 10 + Math.floor(Math.random() * 31);
+  }
+
   user.coins += win;
   user.spinProgress = 0;
 
@@ -91,7 +96,6 @@ app.post("/api/spin", (req, res) => {
   });
 });
 
-// Frontend znajduje się w głównym katalogu
 app.use(express.static(__dirname));
 
 app.get("*", (req, res) => {
@@ -100,4 +104,4 @@ app.get("*", (req, res) => {
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Lucky Tap Slots działa na porcie ${PORT}`);
-});
+});;
