@@ -944,10 +944,11 @@ function showPage(name) {
   );
 
   if (
-    name === "missions"
-  ) {
-    loadMissions();
-  }
+  name === "rewards"
+) {
+  loadRewards();
+  loadRewardHistory();
+}
 
   if (
     name === "ranking"
