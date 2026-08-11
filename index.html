@@ -2,58 +2,433 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8">
+
   <meta
     name="viewport"
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
+
   <title>Lucky Tap Slots</title>
 
-  <link rel="stylesheet" href="/style.css">
+  <link
+    rel="stylesheet"
+    href="/style.css"
+  >
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
 <body>
+
   <main>
-    <h1>🎰 LUCKY TAP SLOTS</h1>
 
-    <h2>
-      🪙 <b id="c">0</b>
-    </h2>
+    <header class="topbar">
 
-    <div id="r"></div>
+      <div>
+        <small class="eyebrow">
+          LUCKY TAP
+        </small>
 
-    <p id="m">
-      Tapnij i naładuj Lucky Spin!
-    </p>
+        <h1>
+          🎰 SLOTS
+        </h1>
+      </div>
 
-    <progress
-      id="p"
-      max="100"
-      value="0"
-    ></progress>
+      <div class="balance-box">
+        <span>MONETY</span>
 
-    <button id="t">
-      ⚡ TAP TO EARN
-    </button>
+        <strong id="c">
+          0
+        </strong>
+      </div>
 
-    <button id="s" disabled>
-      🎰 LUCKY SPIN
-    </button>
+    </header>
 
-    <button id="shop">
-      ⭐ KUP 5 LUCKY SPINÓW — 50 STARS
-    </button>
+    <section
+      id="page-game"
+      class="page active"
+    >
 
-    <p>
-      ⚡ Energia:
-      <b id="e">0/0</b>
-      ·
-      👆 Tapy:
-      <b id="n">0</b>
-    </p>
+      <div class="player-strip">
+
+        <div>
+          <span>LEVEL</span>
+          <strong id="level">
+            1
+          </strong>
+        </div>
+
+        <div>
+          <span>XP</span>
+          <strong id="xp">
+            0
+          </strong>
+        </div>
+
+        <div>
+          <span>RP</span>
+          <strong id="rp">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <section class="machine">
+
+        <div class="jackpot">
+          ✨ JACKPOT ZONE ✨
+        </div>
+
+        <div
+          id="r"
+          class="reels"
+        ></div>
+
+        <p id="m">
+          Tapnij i naładuj Lucky Spin!
+        </p>
+
+      </section>
+
+      <progress
+        id="p"
+        max="100"
+        value="0"
+      ></progress>
+
+      <div class="progress-info">
+
+        <span>
+          Lucky Spin
+        </span>
+
+        <strong id="spin-progress">
+          0/25
+        </strong>
+
+      </div>
+
+      <button
+        id="t"
+        class="tap-btn"
+      >
+        ⚡ TAP TO EARN ⚡
+      </button>
+
+      <button
+        id="s"
+        class="spin-btn"
+        disabled
+      >
+        🎰 LUCKY SPIN
+      </button>
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <span>ENERGIA</span>
+          <strong id="e">
+            0/0
+          </strong>
+        </div>
+
+        <div class="stat-card">
+          <span>TAPY</span>
+          <strong id="n">
+            0
+          </strong>
+        </div>
+
+        <div class="stat-card">
+          <span>BONUS SPINY</span>
+          <strong id="free-spins">
+            0
+          </strong>
+        </div>
+
+        <div class="stat-card">
+          <span>BOOST</span>
+          <strong id="boost">
+            —
+          </strong>
+        </div>
+
+      </div>
+
+      <button
+        id="daily"
+        class="secondary-btn"
+      >
+        🎁 ODBIERZ DAILY BONUS
+      </button>
+
+    </section>
+
+    <section
+      id="page-shop"
+      class="page"
+    >
+
+      <h2>
+        🛒 Sklep
+      </h2>
+
+      <h3>
+        Za Coins
+      </h3>
+
+      <div class="shop-grid">
+
+        <button
+          class="shop-card coin-buy"
+          data-product="spin1"
+        >
+          <strong>
+            🎰 1 Lucky Spin
+          </strong>
+
+          <span>
+            250 Coins
+          </span>
+        </button>
+
+        <button
+          class="shop-card coin-buy"
+          data-product="energy100"
+        >
+          <strong>
+            ⚡ +100 Energii
+          </strong>
+
+          <span>
+            1000 Coins
+          </span>
+        </button>
+
+        <button
+          class="shop-card coin-buy"
+          data-product="x2_30m"
+        >
+          <strong>
+            🔥 x2 Tap
+          </strong>
+
+          <span>
+            5000 Coins · 30 min
+          </span>
+        </button>
+
+      </div>
+
+      <h3>
+        ⭐ Telegram Stars
+      </h3>
+
+      <div class="shop-grid">
+
+        <button
+          class="shop-card star-buy"
+          data-star-product="spins5"
+        >
+          <strong>
+            🎰 5 Lucky Spins
+          </strong>
+
+          <span>
+            ⭐ 50
+          </span>
+        </button>
+
+        <button
+          class="shop-card star-buy"
+          data-star-product="energy500"
+        >
+          <strong>
+            ⚡ Full Energy
+          </strong>
+
+          <span>
+            ⭐ 75
+          </span>
+        </button>
+
+        <button
+          class="shop-card star-buy"
+          data-star-product="x2day"
+        >
+          <strong>
+            🔥 x2 Tap 24H
+          </strong>
+
+          <span>
+            ⭐ 150
+          </span>
+        </button>
+
+        <button
+          class="shop-card star-buy"
+          data-star-product="vip30"
+        >
+          <strong>
+            👑 VIP 30 dni
+          </strong>
+
+          <span>
+            ⭐ 299
+          </span>
+        </button>
+
+      </div>
+
+    </section>
+
+    <section
+      id="page-missions"
+      class="page"
+    >
+
+      <h2>
+        🎯 Misje
+      </h2>
+
+      <div
+        id="missions-list"
+        class="list"
+      ></div>
+
+    </section>
+
+    <section
+      id="page-ranking"
+      class="page"
+    >
+
+      <h2>
+        🏆 Ranking tygodniowy
+      </h2>
+
+      <div
+        id="leaderboard"
+        class="list"
+      ></div>
+
+      <div class="referral-card">
+
+        <h3>
+          👥 Zaproś znajomych
+        </h3>
+
+        <p>
+          Ty dostajesz
+          <strong>
+            500 Coins + 20 RP
+          </strong>
+        </p>
+
+        <p>
+          Znajomy dostaje
+          <strong>
+            250 Coins
+          </strong>
+        </p>
+
+        <button
+          id="share-ref"
+          class="secondary-btn"
+        >
+          🔗 UDOSTĘPNIJ LINK
+        </button>
+
+        <small id="ref-count">
+          Poleceni: 0
+        </small>
+
+      </div>
+
+    </section>
+
+    <section
+      id="page-rewards"
+      class="page"
+    >
+
+      <h2>
+        🎁 Reward Center
+      </h2>
+
+      <div class="reward-balance">
+
+        <span>
+          Reward Points
+        </span>
+
+        <strong id="reward-balance">
+          0 RP
+        </strong>
+
+      </div>
+
+      <p class="info">
+        Reward Points zdobywasz za daily,
+        misje i polecenia. Nagrody wymagające
+        realizacji trafiają do weryfikacji.
+      </p>
+
+      <div
+        id="rewards-list"
+        class="list"
+      ></div>
+
+    </section>
+
   </main>
 
+  <nav class="bottom-nav">
+
+    <button
+      data-page="game"
+      class="nav-btn active"
+    >
+      🎰
+      <span>Gra</span>
+    </button>
+
+    <button
+      data-page="shop"
+      class="nav-btn"
+    >
+      🛒
+      <span>Sklep</span>
+    </button>
+
+    <button
+      data-page="missions"
+      class="nav-btn"
+    >
+      🎯
+      <span>Misje</span>
+    </button>
+
+    <button
+      data-page="ranking"
+      class="nav-btn"
+    >
+      🏆
+      <span>Ranking</span>
+    </button>
+
+    <button
+      data-page="rewards"
+      class="nav-btn"
+    >
+      🎁
+      <span>Nagrody</span>
+    </button>
+
+  </nav>
+
   <script src="/app.js"></script>
+
 </body>
-</html>>
+</html>
