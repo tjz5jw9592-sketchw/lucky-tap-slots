@@ -613,7 +613,6 @@ async function loadLeaderboard() {
       `<p>${error.message}</p>`;
   }
 }
-
 async function loadReferrals() {
   try {
     referralData =
@@ -621,10 +620,34 @@ async function loadReferrals() {
         "/api/referrals"
       );
 
+    q("#ref-code").textContent =
+      referralData.referralCode || "—";
+
     q("#ref-count").textContent =
-      `Poleceni: ${referralData.referrals}`;
+      `Poleceni: ${Number(
+        referralData.referrals || 0
+      )}`;
+
+    q("#ref-my-reward").textContent =
+      `🪙 ${Number(
+        referralData.rewards?.referrerCoins || 0
+      ).toLocaleString("pl-PL")} Coins + 🎁 ${Number(
+        referralData.rewards?.referrerRP || 0
+      ).toLocaleString("pl-PL")} RP`;
+
+    q("#ref-friend-reward").textContent =
+      `🪙 ${Number(
+        referralData.rewards?.invitedCoins || 0
+      ).toLocaleString("pl-PL")} Coins`;
+
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Referrals:",
+      error
+    );
+
+    q("#ref-code").textContent =
+      "Błąd";
   }
 }
 async function shareReferral() {
