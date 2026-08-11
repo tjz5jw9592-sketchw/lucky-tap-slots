@@ -1,4 +1,6 @@
 const q = (s) => document.querySelector(s);
+const qa = (s) => [...document.querySelectorAll(s)];
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -7,7 +9,6 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-const qa = (s) => [...document.querySelectorAll(s)];
 
 const tg = window.Telegram?.WebApp;
 
@@ -137,7 +138,7 @@ function renderUser(user) {
       100,
       Math.round(
         (
-          user.spinProgress /
+          (user.spinProgress || 0) /
           SPIN_TARGET
         ) * 100
       )
@@ -147,7 +148,7 @@ function renderUser(user) {
     progress;
 
   q("#spin-progress").textContent =
-    `${user.spinProgress}/${SPIN_TARGET}`;
+    `${user.spinProgress || 0}/${SPIN_TARGET}`;
 
   const boostText = [];
 
@@ -165,25 +166,25 @@ function renderUser(user) {
       : "—";
 
   const canSpin =
-    user.freeSpins > 0 ||
-    user.spinProgress >=
+    (user.freeSpins || 0) > 0 ||
+    (user.spinProgress || 0) >=
       SPIN_TARGET;
 
   q("#s").disabled =
     !canSpin || spinning;
 
-  if (user.freeSpins > 0) {
+  if ((user.freeSpins || 0) > 0) {
     q("#s").textContent =
       `🎁 LUCKY SPIN — BONUS x${user.freeSpins}`;
   } else if (
-    user.spinProgress >=
+    (user.spinProgress || 0) >=
     SPIN_TARGET
   ) {
     q("#s").textContent =
       "🎰 LUCKY SPIN — GOTOWY!";
   } else {
     q("#s").textContent =
-      `🎰 LUCKY SPIN ${user.spinProgress}/${SPIN_TARGET}`;
+      `🎰 LUCKY SPIN ${user.spinProgress || 0}/${SPIN_TARGET}`;
   }
 }
 
@@ -191,7 +192,9 @@ function animateTap() {
   const cells =
     qa("#r i");
 
-  if (!cells.length) return;
+  if (!cells.length) {
+    return;
+  }
 
   const amount =
     2 +
@@ -228,16 +231,21 @@ function animateTap() {
 async function loadUser() {
   try {
     const user =
-      await api("/api/me");
+      await api(
+        "/api/me"
+      );
 
     renderUser(user);
 
     q("#m").textContent =
-      user.freeSpins > 0
+      (user.freeSpins || 0) > 0
         ? `🎁 Masz ${user.freeSpins} bonusowych spinów`
         : "Tapnij i naładuj Lucky Spin!";
   } catch (error) {
-    console.error(error);
+    console.error(
+      "User:",
+      error
+    );
 
     q("#m").textContent =
       "❌ Nie udało się zalogować";
@@ -248,7 +256,9 @@ async function loadUser() {
 }
 
 async function tap() {
-  if (spinning) return;
+  if (spinning) {
+    return;
+  }
 
   animateTap();
 
@@ -268,12 +278,12 @@ async function tap() {
     renderUser(user);
 
     if (
-      user.freeSpins > 0
+      (user.freeSpins || 0) > 0
     ) {
       q("#m").textContent =
         `🎁 Bonusowe spiny: ${user.freeSpins}`;
     } else if (
-      user.spinProgress >=
+      (user.spinProgress || 0) >=
       SPIN_TARGET
     ) {
       q("#m").textContent =
@@ -282,7 +292,7 @@ async function tap() {
       q("#m").textContent =
         `Jeszcze ${
           SPIN_TARGET -
-          user.spinProgress
+          (user.spinProgress || 0)
         } tapów do spinu`;
     }
   } catch (error) {
@@ -300,11 +310,13 @@ async function spin() {
   }
 
   const canSpin =
-    state.freeSpins > 0 ||
-    state.spinProgress >=
+    (state.freeSpins || 0) > 0 ||
+    (state.spinProgress || 0) >=
       SPIN_TARGET;
 
-  if (!canSpin) return;
+  if (!canSpin) {
+    return;
+  }
 
   spinning = true;
 
@@ -316,10 +328,11 @@ async function spin() {
 
   const animation =
     setInterval(
-      () =>
+      () => {
         drawReels(
           randomBoard()
-        ),
+        );
+      },
       90
     );
 
@@ -505,7 +518,9 @@ async function loadMissions() {
             <div class="list-card">
               <div>
                 <strong>
-                  ${mission.title}
+                  ${escapeHtml(
+                    mission.title
+                  )}
                 </strong>
 
                 <p>
@@ -521,7 +536,9 @@ async function loadMissions() {
 
               <button
                 class="mission-claim"
-                data-mission="${mission.key}"
+                data-mission="${escapeHtml(
+                  mission.key
+                )}"
                 ${
                   !mission.completed ||
                   mission.claimed
@@ -549,7 +566,9 @@ async function loadMissions() {
             try {
               const result =
                 await api(
-                  `/api/missions/${button.dataset.mission}/claim`,
+                  `/api/missions/${encodeURIComponent(
+                    button.dataset.mission
+                  )}/claim`,
                   {
                     method:
                       "POST"
@@ -575,7 +594,9 @@ async function loadMissions() {
     );
   } catch (error) {
     q("#missions-list").innerHTML =
-      `<p>${error.message}</p>`;
+      `<p>${escapeHtml(
+        error.message
+      )}</p>`;
   }
 }
 
@@ -592,16 +613,20 @@ async function loadLeaderboard() {
           (player) => `
             <div class="list-card leaderboard-row">
               <strong>
-                #${player.rank}
+                #${Number(
+                  player.rank || 0
+                )}
               </strong>
 
               <span>
-                ${player.name}
+                ${escapeHtml(
+                  player.name
+                )}
               </span>
 
               <b>
                 ${Number(
-                  player.weeklyCoins
+                  player.weeklyCoins || 0
                 ).toLocaleString("pl-PL")}
               </b>
             </div>
@@ -610,9 +635,12 @@ async function loadLeaderboard() {
         .join("");
   } catch (error) {
     q("#leaderboard").innerHTML =
-      `<p>${error.message}</p>`;
+      `<p>${escapeHtml(
+        error.message
+      )}</p>`;
   }
 }
+
 async function loadReferrals() {
   try {
     referralData =
@@ -621,7 +649,8 @@ async function loadReferrals() {
       );
 
     q("#ref-code").textContent =
-      referralData.referralCode || "—";
+      referralData.referralCode ||
+      "—";
 
     q("#ref-count").textContent =
       `Poleceni: ${Number(
@@ -630,37 +659,60 @@ async function loadReferrals() {
 
     q("#ref-my-reward").textContent =
       `🪙 ${Number(
-        referralData.rewards?.referrerCoins || 0
-      ).toLocaleString("pl-PL")} Coins + 🎁 ${Number(
-        referralData.rewards?.referrerRP || 0
-      ).toLocaleString("pl-PL")} RP`;
+        referralData.rewards
+          ?.referrerCoins || 0
+      ).toLocaleString(
+        "pl-PL"
+      )} Coins + 🎁 ${Number(
+        referralData.rewards
+          ?.referrerRP || 0
+      ).toLocaleString(
+        "pl-PL"
+      )} RP`;
 
     q("#ref-friend-reward").textContent =
       `🪙 ${Number(
-        referralData.rewards?.invitedCoins || 0
-      ).toLocaleString("pl-PL")} Coins`;
-
+        referralData.rewards
+          ?.invitedCoins || 0
+      ).toLocaleString(
+        "pl-PL"
+      )} Coins`;
   } catch (error) {
     console.error(
       "Referrals:",
       error
     );
 
+    referralData = null;
+
     q("#ref-code").textContent =
       "Błąd";
   }
 }
+
 async function shareReferral() {
   if (!referralData) {
     await loadReferrals();
   }
 
   if (!referralData) {
-    alert("Nie udało się pobrać linku polecającego.");
+    alert(
+      "Nie udało się pobrać linku polecającego."
+    );
+
     return;
   }
 
-  const botUsername = "ACABBACA_bot";
+  if (!referralData.startParam) {
+    alert(
+      "Brak parametru linku polecającego."
+    );
+
+    return;
+  }
+
+  const botUsername =
+    "ACABBACA_bot";
 
   const link =
     `https://t.me/${botUsername}?startapp=${encodeURIComponent(
@@ -673,187 +725,206 @@ async function shareReferral() {
   try {
     if (navigator.share) {
       await navigator.share({
-        title: "Lucky Tap Slots",
-        text: text
+        title:
+          "Lucky Tap Slots",
+        text
       });
+
       return;
     }
 
-    await navigator.clipboard.writeText(link);
+    await navigator.clipboard.writeText(
+      link
+    );
 
     alert(
       `Twój link polecający:\n\n${link}\n\nLink został skopiowany.`
     );
   } catch (error) {
+    if (
+      error?.name ===
+      "AbortError"
+    ) {
+      return;
+    }
+
     alert(
       `Twój link polecający:\n\n${link}`
     );
   }
 }
 
-
 async function loadRewardHistory() {
+  const box =
+    q("#reward-history");
+
+  if (!box) {
+    return;
+  }
+
   try {
     const history =
       await api(
         "/api/rewards/history"
       );
 
-    const box =
-      q("#reward-history");
-
-    if (!history.length) {
-      box.innerHTML =
-        `
+    if (
+      !Array.isArray(history) ||
+      !history.length
+    ) {
+      box.innerHTML = `
         <div class="list-card">
           <small>
             Nie masz jeszcze żadnych zgłoszeń.
           </small>
         </div>
-        `;
+      `;
 
       return;
     }
 
     box.innerHTML =
       history
-        .map(item => {
-          let statusText =
-            "⏳ Oczekuje";
+        .map(
+          (item) => {
+            let statusText =
+              "⏳ Oczekuje";
 
-          if (
-            item.status ===
-            "approved"
-          ) {
-            statusText =
-              "✅ Zatwierdzono";
-          }
+            if (
+              item.status ===
+              "approved"
+            ) {
+              statusText =
+                "✅ Zatwierdzono";
+            }
 
-          if (
-            item.status ===
-            "rejected"
-          ) {
-            statusText =
-              "❌ Odrzucono";
-          }
+            if (
+              item.status ===
+              "rejected"
+            ) {
+              statusText =
+                "❌ Odrzucono";
+            }
 
-          let extra = "";
+            let extra = "";
 
-          if (
-            item.adminNote
-          ) {
-            extra += `
-              <p>
-                💬 ${escapeHtml(
-                  item.adminNote
-                )}
-              </p>
-            `;
-          }
-
-          if (
-            item.status ===
-              "approved" &&
-            item.fulfillmentCode
-          ) {
-            extra += `
-              <div class="reward-code">
-                <small>
-                  TWÓJ KOD
-                </small>
-
-                <strong>
-                  ${escapeHtml(
-                    item.fulfillmentCode
-                  )}
-                </strong>
-
-                <button
-                  class="copy-reward-code"
-                  data-code="${escapeHtml(
-                    item.fulfillmentCode
-                  )}"
-                >
-                  📋 KOPIUJ
-                </button>
-              </div>
-            `;
-          }
-
-          return `
-            <div class="list-card reward-history-card">
-              <div>
-                <strong>
-                  ${escapeHtml(
-                    item.label
-                  )}
-                </strong>
-
+            if (item.adminNote) {
+              extra += `
                 <p>
-                  ${statusText}
+                  💬 ${escapeHtml(
+                    item.adminNote
+                  )}
                 </p>
+              `;
+            }
 
-                <small>
-                  ${Number(
-                    item.cost
-                  ).toLocaleString(
-                    "pl-PL"
-                  )} RP
-                </small>
+            if (
+              item.status ===
+                "approved" &&
+              item.fulfillmentCode
+            ) {
+              extra += `
+                <div class="reward-code">
+                  <small>
+                    TWÓJ KOD
+                  </small>
 
-                ${extra}
+                  <strong>
+                    ${escapeHtml(
+                      item.fulfillmentCode
+                    )}
+                  </strong>
+
+                  <button
+                    class="copy-reward-code"
+                    data-code="${escapeHtml(
+                      item.fulfillmentCode
+                    )}"
+                  >
+                    📋 KOPIUJ
+                  </button>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="list-card reward-history-card">
+                <div>
+                  <strong>
+                    ${escapeHtml(
+                      item.label
+                    )}
+                  </strong>
+
+                  <p>
+                    ${statusText}
+                  </p>
+
+                  <small>
+                    ${Number(
+                      item.cost || 0
+                    ).toLocaleString(
+                      "pl-PL"
+                    )} RP
+                  </small>
+
+                  ${extra}
+                </div>
               </div>
-            </div>
-          `;
-        })
+            `;
+          }
+        )
         .join("");
 
     qa(
       ".copy-reward-code"
-    ).forEach(button => {
-      button.onclick =
-        async () => {
-          const code =
-            button.dataset.code;
+    ).forEach(
+      (button) => {
+        button.onclick =
+          async () => {
+            const code =
+              button.dataset.code;
 
-          try {
-            await navigator
-              .clipboard
-              .writeText(code);
+            try {
+              await navigator
+                .clipboard
+                .writeText(
+                  code
+                );
 
-            button.textContent =
-              "✅ SKOPIOWANO";
+              button.textContent =
+                "✅ SKOPIOWANO";
 
-            setTimeout(
-              () => {
-                button.textContent =
-                  "📋 KOPIUJ";
-              },
-              1500
-            );
-          } catch {
-            alert(
-              `Kod: ${code}`
-            );
-          }
-        };
-    });
+              setTimeout(
+                () => {
+                  button.textContent =
+                    "📋 KOPIUJ";
+                },
+                1500
+              );
+            } catch {
+              alert(
+                `Kod: ${code}`
+              );
+            }
+          };
+      }
+    );
   } catch (error) {
     console.error(
       "Reward history:",
       error
     );
 
-    q("#reward-history").innerHTML =
-      `
+    box.innerHTML = `
       <div class="list-card">
         <small>
           Nie udało się pobrać historii.
         </small>
       </div>
-      `;
-
-     }
+    `;
+  }
+}
 
 async function loadRewards() {
   try {
@@ -864,31 +935,50 @@ async function loadRewards() {
 
     q("#reward-balance").textContent =
       `${Number(
-        data.balance
-      ).toLocaleString("pl-PL")} RP`;
+        data.balance || 0
+      ).toLocaleString(
+        "pl-PL"
+      )} RP`;
+
+    const rewards =
+      Array.isArray(
+        data.rewards
+      )
+        ? data.rewards
+        : [];
 
     q("#rewards-list").innerHTML =
-      data.rewards
+      rewards
         .map(
           (reward) => `
             <div class="list-card">
               <div>
                 <strong>
-                  🎁 ${reward.label}
+                  🎁 ${escapeHtml(
+                    reward.label
+                  )}
                 </strong>
 
                 <p>
-                  ${reward.cost} RP
+                  ${Number(
+                    reward.cost || 0
+                  ).toLocaleString(
+                    "pl-PL"
+                  )} RP
                 </p>
 
                 <small>
-                  Wymagany Level ${reward.minLevel}
+                  Wymagany Level ${Number(
+                    reward.minLevel || 1
+                  )}
                 </small>
               </div>
 
               <button
                 class="reward-redeem"
-                data-reward="${reward.key}"
+                data-reward="${escapeHtml(
+                  reward.key
+                )}"
                 ${
                   reward.available
                     ? ""
@@ -917,10 +1007,15 @@ async function loadRewards() {
               return;
             }
 
+            button.disabled =
+              true;
+
             try {
               const result =
                 await api(
-                  `/api/rewards/${button.dataset.reward}/redeem`,
+                  `/api/rewards/${encodeURIComponent(
+                    button.dataset.reward
+                  )}/redeem`,
                   {
                     method:
                       "POST"
@@ -932,34 +1027,50 @@ async function loadRewards() {
               );
 
               await loadUser();
-              await loadRewards();
+
+              await Promise.all([
+                loadRewards(),
+                loadRewardHistory()
+              ]);
             } catch (error) {
               alert(
                 error.message
               );
+
+              button.disabled =
+                false;
             }
           };
       }
     );
   } catch (error) {
+    console.error(
+      "Rewards:",
+      error
+    );
+
     q("#rewards-list").innerHTML =
-      `<p>${error.message}</p>`;
+      `<p>${escapeHtml(
+        error.message
+      )}</p>`;
   }
 }
 
 function showPage(name) {
   qa(".page").forEach(
-    (page) =>
+    (page) => {
       page.classList.remove(
         "active"
-      )
+      );
+    }
   );
 
   qa(".nav-btn").forEach(
-    (button) =>
+    (button) => {
       button.classList.remove(
         "active"
-      )
+      );
+    }
   );
 
   q(
@@ -975,23 +1086,26 @@ function showPage(name) {
   );
 
   if (
-  name === "rewards"
-) {
-  loadRewards();
-  loadRewardHistory();
-}
+    name ===
+    "missions"
+  ) {
+    loadMissions();
+  }
 
   if (
-    name === "ranking"
+    name ===
+    "ranking"
   ) {
     loadLeaderboard();
     loadReferrals();
   }
 
   if (
-    name === "rewards"
+    name ===
+    "rewards"
   ) {
     loadRewards();
+    loadRewardHistory();
   }
 }
 
@@ -1007,33 +1121,42 @@ q("#daily").onclick =
 q("#share-ref").onclick =
   shareReferral;
 
-qa(".coin-buy").forEach(
+qa(
+  ".coin-buy"
+).forEach(
   (button) => {
     button.onclick =
-      () =>
+      () => {
         buyCoinProduct(
           button.dataset.product
         );
+      };
   }
 );
 
-qa(".star-buy").forEach(
+qa(
+  ".star-buy"
+).forEach(
   (button) => {
     button.onclick =
-      () =>
+      () => {
         buyStarProduct(
           button.dataset.starProduct
         );
+      };
   }
 );
 
-qa(".nav-btn").forEach(
+qa(
+  ".nav-btn"
+).forEach(
   (button) => {
     button.onclick =
-      () =>
+      () => {
         showPage(
           button.dataset.page
         );
+      };
   }
 );
 
@@ -1049,4 +1172,4 @@ drawReels([
   "🍒"
 ]);
 
-loadUser();;
+loadUser();
