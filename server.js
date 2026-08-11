@@ -2,6 +2,9 @@ const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
 const { Pool } = require("pg");
+const {
+  registerAdminRoutes
+} = require("./admin");
 
 const app = express();
 app.use(express.json());
@@ -92,7 +95,14 @@ const REWARD_CATALOG = {
 const pool = new Pool({
   connectionString: DATABASE_URL
 });
-
+registerAdminRoutes({
+  app,
+  pool,
+  adminPassword:
+    process.env.ADMIN_PASSWORD,
+  signingSecret:
+    BOT_TOKEN
+});
 const tapWindows = new Map();
 
 function allowTap(telegramId) {
