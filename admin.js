@@ -540,83 +540,228 @@ function registerAdminRoutes({
     }
   );
 
-  app.post(
-    "/api/admin/rewards/:id/status",
-    requireAdmin,
-    async (req, res) => {
-      const status =
-        req.body?.status;
+app.post(
+  "/api/admin/rewards/:id/status",
+  requireAdmin,
+  async (req, res) => {
+    const status =
+      req.body?.status;
+
+    const fulfillmentCode =
+      String(
+        req.body?.fulfillmentCode || ""
+      ).trim();
+
+    const adminNote =
+      String(
+        req.body?.adminNote || ""
+      ).trim();
+
+    if (
+      ![
+        "approved",
+        "rejected"
+      ].includes(status)
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Nieprawidłowy status"
+        });
+    }
+
+    if (
+      status === "approved" &&
+      !fulfillmentCode
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Podaj kod nagrody lub kuponu"
+        });
+    }
+
+    const client =
+      await pool.connect();
+
+    try {
+      await client.query(
+        "BEGIN"
+      );
+
+      const locked =
+        await client.query(
+          `
+          SELECT *
+          FROM reward_redemptions
+          WHERE id = $1
+          FOR UPDATE
+          `,
+          [
+            req.params.id
+          ]
+        );
+
+      if (!locked.rowCount) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res
+          .status(404)
+          .json({
+            error:
+              "Zgłoszenie nie istnieje"
+          });
+      }
+
+      const reward =
+        locked.rows[0];
 
       if (
-        ![
-          "approved",
-          "rejected"
-        ].includes(status)
+        reward.status !==
+        "pending"
       ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
         return res
           .status(400)
           .json({
             error:
-              "Nieprawidłowy status"
+              "To zgłoszenie zostało już obsłużone"
           });
       }
 
-      try {
-        const result =
-          await pool.query(
-            `
-            UPDATE reward_redemptions
+      if (
+        status ===
+        "rejected"
+      ) {
+        await client.query(
+          `
+          UPDATE users
 
-            SET
-              status = $2,
+          SET
+            reward_points =
+              reward_points + $2,
 
-              fulfilled_at =
-                CASE
-                  WHEN $2 =
-                    'approved'
-                  THEN NOW()
-                  ELSE
-                    fulfilled_at
-                END
+            updated_at =
+              NOW()
 
-            WHERE id = $1
+          WHERE telegram_id = $1
+          `,
+          [
+            String(
+              reward.telegram_id
+            ),
 
-            RETURNING *
-            `,
-            [
-              req.params.id,
-              status
-            ]
-          );
-
-        if (!result.rowCount) {
-          return res
-            .status(404)
-            .json({
-              error:
-                "Zgłoszenie nie istnieje"
-            });
-        }
-
-        res.json({
-          ok: true,
-          reward:
-            result.rows[0]
-        });
-      } catch (error) {
-        console.error(
-          "Admin reward status:",
-          error
+            Number(
+              reward.rp_cost
+            )
+          ]
         );
 
-        res.status(500).json({
-          error:
-            "Zmiana statusu nieudana"
-        });
+        await client.query(
+          `
+          UPDATE reward_redemptions
+
+          SET
+            status =
+              'rejected',
+
+            refunded_at =
+              NOW(),
+
+            admin_note =
+              $2
+
+          WHERE id = $1
+          `,
+          [
+            req.params.id,
+            adminNote ||
+              "Zgłoszenie odrzucone — RP zwrócone."
+          ]
+        );
       }
+
+      if (
+        status ===
+        "approved"
+      ) {
+        await client.query(
+          `
+          UPDATE reward_redemptions
+
+          SET
+            status =
+              'approved',
+
+            fulfilled_at =
+              NOW(),
+
+            fulfillment_code =
+              $2,
+
+            admin_note =
+              $3
+
+          WHERE id = $1
+          `,
+          [
+            req.params.id,
+            fulfillmentCode,
+            adminNote ||
+              "Nagroda zatwierdzona."
+          ]
+        );
+      }
+
+      const result =
+        await client.query(
+          `
+          SELECT *
+          FROM reward_redemptions
+          WHERE id = $1
+          `,
+          [
+            req.params.id
+          ]
+        );
+
+      await client.query(
+        "COMMIT"
+      );
+
+      res.json({
+        ok: true,
+        reward:
+          result.rows[0]
+      });
+    } catch (error) {
+      await client.query(
+        "ROLLBACK"
+      );
+
+      console.error(
+        "Admin reward status:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "Nie udało się obsłużyć nagrody"
+        });
+    } finally {
+      client.release();
     }
-  );
-}
+  }
+);
 
 module.exports = {
   registerAdminRoutes
