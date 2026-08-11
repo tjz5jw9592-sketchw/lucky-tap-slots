@@ -853,7 +853,7 @@ async function loadRewardHistory() {
       </div>
       `;
   }
-}
+async function loadRewards() {
   try {
     const data =
       await api(
