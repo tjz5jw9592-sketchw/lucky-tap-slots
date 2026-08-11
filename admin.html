@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Lucky Tap Admin</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, #1d2740 0, #080b13 45%, #03050a 100%);
+      color: #fff;
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+
+    .login {
+      max-width: 420px;
+      margin: 100px auto 0;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px;
+      background: rgba(16,22,35,.95);
+    }
+
+    .login h1 {
+      margin-top: 0;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      background: #0a0f19;
+      color: #fff;
+    }
+
+    .primary {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px 16px;
+      border: 0;
+      border-radius: 12px;
+      background: #ffc928;
+      color: #201400;
+      font-weight: 900;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+    }
+
+    .logout {
+      padding: 10px 13px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 11px;
+      background: #111827;
+      color: #fff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      background: rgba(15,22,35,.94);
+    }
+
+    .card small {
+      display: block;
+      margin-bottom: 7px;
+      color: #8993a5;
+      font-weight: 800;
+    }
+
+    .card strong {
+      font-size: 24px;
+      color: #ffc928;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      padding: 11px 15px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 11px;
+      background: #0d1320;
+      color: #abb4c3;
+    }
+
+    .tab.active {
+      background: #ffc928;
+      color: #171000;
+      font-weight: 900;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr .8fr .8fr .8fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 13px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: #0d1320;
+    }
+
+    .row small {
+      color: #8993a5;
+    }
+
+    .row button {
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 9px;
+      font-weight: 800;
+    }
+
+    .approve {
+      background: #1fda7a;
+      color: #062813;
+    }
+
+    .reject {
+      background: #ff6464;
+      color: #2b0606;
+    }
+
+    .neutral {
+      background: #263248;
+      color: #fff;
+    }
+
+    .muted {
+      color: #8993a5;
+    }
+
+    .adjust-box {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .adjust-box input {
+      padding: 9px 10px;
+    }
+
+    .status-pending {
+      color: #ffc928;
+    }
+
+    .status-approved {
+      color: #20df7f;
+    }
+
+    .status-rejected {
+      color: #ff6f6f;
+    }
+
+    .empty {
+      padding: 25px;
+      text-align: center;
+      color: #8993a5;
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <section id="login" class="login">
+      <h1>🎰 Lucky Tap Admin</h1>
+
+      <p class="muted">
+        Zaloguj się hasłem administratora.
+      </p>
+
+      <input
+        id="password"
+        type="password"
+        placeholder="ADMIN_PASSWORD"
+        autocomplete="current-password"
+      >
+
+      <button id="loginBtn" class="primary">
+        ZALOGUJ
+      </button>
+
+      <p id="loginMsg" class="muted"></p>
+    </section>
+
+    <section id="dashboard" class="hidden">
+
+      <header>
+        <div>
+          <small class="muted">LUCKY TAP</small>
+          <h1>Panel administratora</h1>
+        </div>
+
+        <button id="logoutBtn" class="logout">
+          Wyloguj
+        </button>
+      </header>
+
+      <div class="stats">
+        <div class="card">
+          <small>GRACZE</small>
+          <strong id="statUsers">0</strong>
+        </div>
+
+        <div class="card">
+          <small>TAPY</small>
+          <strong id="statTaps">0</strong>
+        </div>
+
+        <div class="card">
+          <small>COINS W OBIEGU</small>
+          <strong id="statCoins">0</strong>
+        </div>
+
+        <div class="card">
+          <small>PŁATNOŚCI</small>
+          <strong id="statPayments">0</strong>
+        </div>
+
+        <div class="card">
+          <small>STARS</small>
+          <strong id="statStars">0</strong>
+        </div>
+
+        <div class="card">
+          <small>NAGRODY PENDING</small>
+          <strong id="statRewards">0</strong>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="users">
+          Gracze
+        </button>
+
+        <button class="tab" data-tab="payments">
+          Płatności
+        </button>
+
+        <button class="tab" data-tab="rewards">
+          Nagrody
+        </button>
+      </div>
+
+      <section id="panel-users" class="panel active">
+        <div id="users"></div>
+      </section>
+
+      <section id="panel-payments" class="panel">
+        <div id="payments"></div>
+      </section>
+
+      <section id="panel-rewards" class="panel">
+        <div id="rewards"></div>
+      </section>
+
+    </section>
+
+  </div>
+
+  <script>
+    const q = s => document.querySelector(s);
+    const qa = s => [...document.querySelectorAll(s)];
+
+    const fmt = n =>
+      Number(n || 0).toLocaleString("pl-PL");
+
+    async function request(url, options = {}) {
+      const res = await fetch(url, {
+        credentials: "include",
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+
+      let data = {};
+
+      try {
+        data = await res.json();
+      } catch {}
+
+      if (!res.ok) {
+        throw new Error(
+          data.error || "Błąd API"
+        );
+      }
+
+      return data;
+    }
+
+    async function checkLogin() {
+      try {
+        await request("/api/admin/me");
+
+        q("#login").classList.add("hidden");
+        q("#dashboard").classList.remove("hidden");
+
+        await loadAll();
+      } catch {
+        q("#login").classList.remove("hidden");
+        q("#dashboard").classList.add("hidden");
+      }
+    }
+
+    async function login() {
+      const password = q("#password").value;
+
+      q("#loginMsg").textContent = "Logowanie...";
+
+      try {
+        await request(
+          "/api/admin/login",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              password
+            })
+          }
+        );
+
+        q("#password").value = "";
+        q("#loginMsg").textContent = "";
+
+        await checkLogin();
+      } catch (e) {
+        q("#loginMsg").textContent = e.message;
+      }
+    }
+
+    async function logout() {
+      try {
+        await request(
+          "/api/admin/logout",
+          {
+            method: "POST"
+          }
+        );
+      } catch {}
+
+      location.reload();
+    }
+
+    async function loadStats() {
+      const s =
+        await request("/api/admin/stats");
+
+      q("#statUsers").textContent =
+        fmt(s.users);
+
+      q("#statTaps").textContent =
+        fmt(s.taps);
+
+      q("#statCoins").textContent =
+        fmt(s.coins);
+
+      q("#statPayments").textContent =
+        fmt(s.payments);
+
+      q("#statStars").textContent =
+        fmt(s.stars);
+
+      q("#statRewards").textContent =
+        fmt(s.pendingRewards);
+    }
+
+    async function loadUsers() {
+      const users =
+        await request("/api/admin/users");
+
+      if (!users.length) {
+        q("#users").innerHTML =
+          '<div class="empty">Brak graczy</div>';
+
+        return;
+      }
+
+      q("#users").innerHTML =
+        users.map(u => `
+          <div class="row">
+            <div>
+              <strong>
+                ${u.username
+                  ? "@" + u.username
+                  : u.firstName || "Gracz"}
+              </strong>
+
+              <br>
+
+              <small>
+                ID ${u.telegramId}
+              </small>
+            </div>
+
+            <div>
+              🪙 ${fmt(u.coins)}
+              <br>
+              <small>Coins</small>
+            </div>
+
+            <div>
+              ⚡ ${fmt(u.energy)}
+              <br>
+              <small>Energia</small>
+            </div>
+
+            <div>
+              👆 ${fmt(u.taps)}
+              <br>
+              <small>Tapy</small>
+            </div>
+
+            <div>
+              🎰 ${fmt(u.spins)}
+              <br>
+              <small>Spiny</small>
+            </div>
+
+            <button
+              class="neutral adjust-toggle"
+              data-user="${u.telegramId}"
+            >
+              Edytuj
+            </button>
+
+            <div
+              id="adjust-${u.telegramId}"
+              class="adjust-box hidden"
+              style="grid-column:1/-1"
+            >
+              <input
+                id="coins-${u.telegramId}"
+                type="number"
+                value="0"
+                placeholder="+/- Coins"
+              >
+
+              <input
+                id="rp-${u.telegramId}"
+                type="number"
+                value="0"
+                placeholder="+/- RP"
+              >
+
+              <input
+                id="spins-${u.telegramId}"
+                type="number"
+                value="0"
+                placeholder="+/- Spiny"
+              >
+
+              <button
+                class="approve save-adjust"
+                data-user="${u.telegramId}"
+              >
+                ZAPISZ ZMIANY
+              </button>
+            </div>
+          </div>
+        `).join("");
+
+      qa(".adjust-toggle").forEach(btn => {
+        btn.onclick = () => {
+          q(
+            "#adjust-" + btn.dataset.user
+          ).classList.toggle("hidden");
+        };
+      });
+
+      qa(".save-adjust").forEach(btn => {
+        btn.onclick = async () => {
+          const id =
+            btn.dataset.user;
+
+          const coins =
+            Number(
+              q("#coins-" + id).value || 0
+            );
+
+          const rewardPoints =
+            Number(
+              q("#rp-" + id).value || 0
+            );
+
+          const spins =
+            Number(
+              q("#spins-" + id).value || 0
+            );
+
+          try {
+            await request(
+              `/api/admin/users/${id}/adjust`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  coins,
+                  rewardPoints,
+                  spins
+                })
+              }
+            );
+
+            alert("✅ Zapisano");
+
+            await loadUsers();
+            await loadStats();
+          } catch (e) {
+            alert(e.message);
+          }
+        };
+      });
+    }
+
+    async function loadPayments() {
+      const list =
+        await request("/api/admin/payments");
+
+      if (!list.length) {
+        q("#payments").innerHTML =
+          '<div class="empty">Brak płatności</div>';
+
+        return;
+      }
+
+      q("#payments").innerHTML =
+        list.map(p => `
+          <div class="row">
+            <div>
+              <strong>
+                ${p.payload}
+              </strong>
+
+              <br>
+
+              <small>
+                ${new Date(
+                  p.created_at
+                ).toLocaleString("pl-PL")}
+              </small>
+            </div>
+
+            <div>
+              Telegram ID
+              <br>
+              <small>
+                ${p.telegram_id}
+              </small>
+            </div>
+
+            <div>
+              ⭐ ${fmt(p.amount)}
+            </div>
+
+            <div>
+              ${p.currency}
+            </div>
+
+            <div style="grid-column:span 2">
+              <small>
+                ${p.telegram_payment_charge_id}
+              </small>
+            </div>
+          </div>
+        `).join("");
+    }
+
+    async function setRewardStatus(
+      id,
+      status
+    ) {
+      try {
+        await request(
+          `/api/admin/rewards/${id}/status`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              status
+            })
+          }
+        );
+
+        await loadRewards();
+        await loadStats();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function loadRewards() {
+      const list =
+        await request("/api/admin/rewards");
+
+      if (!list.length) {
+        q("#rewards").innerHTML =
+          '<div class="empty">Brak zgłoszeń</div>';
+
+        return;
+      }
+
+      q("#rewards").innerHTML =
+        list.map(r => `
+          <div class="row">
+            <div>
+              <strong>
+                ${r.reward_label}
+              </strong>
+
+              <br>
+
+              <small>
+                ${r.username
+                  ? "@" + r.username
+                  : r.first_name || "Gracz"}
+                · ID ${r.telegram_id}
+              </small>
+            </div>
+
+            <div>
+              ${fmt(r.rp_cost)} RP
+            </div>
+
+            <div>
+              <span class="status-${r.status}">
+                ${r.status}
+              </span>
+            </div>
+
+            <div>
+              <small>
+                ${new Date(
+                  r.created_at
+                ).toLocaleString("pl-PL")}
+              </small>
+            </div>
+
+            ${
+              r.status === "pending"
+                ? `
+                  <button
+                    class="approve reward-action"
+                    data-id="${r.id}"
+                    data-status="approved"
+                  >
+                    Zatwierdź
+                  </button>
+
+                  <button
+                    class="reject reward-action"
+                    data-id="${r.id}"
+                    data-status="rejected"
+                  >
+                    Odrzuć
+                  </button>
+                `
+                : `
+                  <div></div>
+                  <div></div>
+                `
+            }
+          </div>
+        `).join("");
+
+      qa(".reward-action").forEach(btn => {
+        btn.onclick = () =>
+          setRewardStatus(
+            btn.dataset.id,
+            btn.dataset.status
+          );
+      });
+    }
+
+    async function loadAll() {
+      try {
+        await Promise.all([
+          loadStats(),
+          loadUsers(),
+          loadPayments(),
+          loadRewards()
+        ]);
+      } catch (e) {
+        if (
+          e.message === "Brak dostępu"
+        ) {
+          location.reload();
+          return;
+        }
+
+        alert(e.message);
+      }
+    }
+
+    qa(".tab").forEach(btn => {
+      btn.onclick = () => {
+        qa(".tab").forEach(
+          x => x.classList.remove("active")
+        );
+
+        qa(".panel").forEach(
+          x => x.classList.remove("active")
+        );
+
+        btn.classList.add("active");
+
+        q(
+          "#panel-" + btn.dataset.tab
+        ).classList.add("active");
+      };
+    });
+
+    q("#loginBtn").onclick = login;
+    q("#logoutBtn").onclick = logout;
+
+    q("#password").addEventListener(
+      "keydown",
+      e => {
+        if (e.key === "Enter") {
+          login();
+        }
+      }
+    );
+
+    checkLogin();
+  </script>
+
+</body>
+</html>
