@@ -1,4 +1,12 @@
 const q = (s) => document.querySelector(s);
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 const qa = (s) => [...document.querySelectorAll(s)];
 
 const tg = window.Telegram?.WebApp;
