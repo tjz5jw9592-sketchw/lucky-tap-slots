@@ -668,8 +668,8 @@ async function shareReferral() {
   }
 }
 
-asyn
-  async function loadRewardHistory() {
+
+async function loadRewardHistory() {
   try {
     const history =
       await api(
