@@ -156,7 +156,7 @@ app.post("/api/shop/stars/spins", async (req, res) => {
         prices: [
           {
             label: "5 Lucky Spins",
-            amount: 50
+            amount: 1
           }
         ]
       }
