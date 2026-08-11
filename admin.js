@@ -541,7 +541,6 @@ function registerAdminRoutes({
   );
 
 app.post(
-  function registerAdminRoutes({ ... }) {
   "/api/admin/rewards/:id/status",
   requireAdmin,
   async (req, res) => {
