@@ -764,6 +764,8 @@ app.post(
   }
 );
 
+}
+
 module.exports = {
   registerAdminRoutes
 };
