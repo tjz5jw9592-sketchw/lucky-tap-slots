@@ -156,7 +156,7 @@ app.post("/api/shop/stars/spins", async (req, res) => {
         prices: [
           {
             label: "5 Lucky Spins",
-            amount: 1
+            amount: 50
           }
         ]
       }
@@ -214,7 +214,7 @@ app.post(
           payment.currency === "XTR" &&
           payment.invoice_payload ===
             "lucky_5_spins" &&
-          payment.total_amount === 1;
+          payment.total_amount === 50;
 
         if (
           validPayment &&
