@@ -250,8 +250,27 @@ app.get("*", (req, res) => {
   );
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, "0.0.0.0", async () => {
   console.log(
     `Lucky Tap Slots działa na porcie ${PORT}`
   );
+
+  try {
+    const webhookUrl =
+      "https://lucky-tap-slots-production.up.railway.app/telegram/webhook";
+
+    await telegram("setWebhook", {
+      url: webhookUrl
+    });
+
+    console.log(
+      "✅ Telegram webhook ustawiony:",
+      webhookUrl
+    );
+  } catch (error) {
+    console.error(
+      "❌ Nie udało się ustawić webhooka:",
+      error
+    );
+  }
 });
