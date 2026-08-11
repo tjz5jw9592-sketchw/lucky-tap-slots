@@ -668,7 +668,7 @@ async function shareReferral() {
   }
 }
 
-async function loadRewards() {
+asyn
   async function loadRewardHistory() {
   try {
     const history =
