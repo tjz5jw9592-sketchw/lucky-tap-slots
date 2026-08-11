@@ -852,7 +852,9 @@ async function loadRewardHistory() {
         </small>
       </div>
       `;
-  }
+
+     }
+
 async function loadRewards() {
   try {
     const data =
