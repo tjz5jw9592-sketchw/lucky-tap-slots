@@ -412,7 +412,25 @@ async function initDatabase() {
       fulfilled_at TIMESTAMPTZ
     )
   `);
+  await pool.query(`
+    ALTER TABLE reward_redemptions
+    ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ
+  `);
 
+  await pool.query(`
+    ALTER TABLE reward_redemptions
+    ADD COLUMN IF NOT EXISTS admin_note TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE reward_redemptions
+    ADD COLUMN IF NOT EXISTS fulfillment_code TEXT
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS reward_redemptions_user_idx
+    ON reward_redemptions(telegram_id, created_at DESC)
+  `);
   console.log(
     "✅ Database 3.0 ready"
   );
@@ -2090,37 +2108,82 @@ app.get(
     });
   }
 );
+app.get(
+  "/api/rewards/history",
+  requireTelegramUser,
+  async (req, res) => {
+    try {
+      const telegramId =
+        String(req.telegramUser.id);
 
+      const result =
+        await pool.query(
+          `
+          SELECT
+            id,
+            reward_key,
+            reward_label,
+            rp_cost,
+            status,
+            created_at,
+            fulfilled_at,
+            admin_note,
+            fulfillment_code
+          FROM reward_redemptions
+          WHERE telegram_id = $1
+          ORDER BY created_at DESC
+          LIMIT 50
+          `,
+          [telegramId]
+        );
+
+      res.json(
+        result.rows.map(row => ({
+          id: String(row.id),
+          rewardKey: row.reward_key,
+          label: row.reward_label,
+          cost: Number(row.rp_cost),
+          status: row.status,
+          createdAt: row.created_at,
+          fulfilledAt: row.fulfilled_at,
+          adminNote: row.admin_note || null,
+          fulfillmentCode:
+            row.status === "approved"
+              ? row.fulfillment_code
+              : null
+        }))
+      );
+    } catch (error) {
+      console.error("Reward history:", error);
+
+      res.status(500).json({
+        error:
+          "Nie udało się pobrać historii nagród"
+      });
+    }
+  }
+);
 app.post(
   "/api/rewards/:key/redeem",
   requireTelegramUser,
   async (req, res) => {
     const reward =
-      REWARD_CATALOG[
-        req.params.key
-      ];
+      REWARD_CATALOG[req.params.key];
 
     if (!reward) {
-      return res
-        .status(404)
-        .json({
-          error:
-            "Nagroda nie istnieje"
-        });
+      return res.status(404).json({
+        error: "Nagroda nie istnieje"
+      });
     }
 
     const telegramId =
-      String(
-        req.telegramUser.id
-      );
+      String(req.telegramUser.id);
 
     const client =
       await pool.connect();
 
     try {
-      await client.query(
-        "BEGIN"
-      );
+      await client.query("BEGIN");
 
       const locked =
         await client.query(
@@ -2136,29 +2199,62 @@ app.post(
       const user =
         locked.rows[0];
 
+      if (!user) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          error: "Gracz nie istnieje"
+        });
+      }
+
       const level =
-        levelFromXp(
-          user.xp
-        );
+        levelFromXp(user.xp);
+
+      if (level < reward.minLevel) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error:
+            `Wymagany Level ${reward.minLevel}`
+        });
+      }
 
       if (
-        Number(
-          user.reward_points
-        ) <
-          reward.cost ||
-        level <
-          reward.minLevel
+        Number(user.reward_points) <
+        reward.cost
       ) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error:
+            "Za mało Reward Points"
+        });
+      }
+
+      const existing =
         await client.query(
-          "ROLLBACK"
+          `
+          SELECT id
+          FROM reward_redemptions
+          WHERE
+            telegram_id = $1
+            AND reward_key = $2
+            AND status = 'pending'
+          LIMIT 1
+          `,
+          [
+            telegramId,
+            req.params.key
+          ]
         );
 
-        return res
-          .status(400)
-          .json({
-            error:
-              "Nie spełniasz wymagań"
-          });
+      if (existing.rowCount > 0) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error:
+            "Masz już oczekujące zgłoszenie tej nagrody"
+        });
       }
 
       await client.query(
@@ -2167,10 +2263,7 @@ app.post(
         SET
           reward_points =
             reward_points - $2,
-
-          updated_at =
-            NOW()
-
+          updated_at = NOW()
         WHERE telegram_id = $1
         `,
         [
@@ -2186,16 +2279,16 @@ app.post(
             telegram_id,
             reward_key,
             reward_label,
-            rp_cost
+            rp_cost,
+            status
           )
-
           VALUES (
             $1,
             $2,
             $3,
-            $4
+            $4,
+            'pending'
           )
-
           RETURNING *
           `,
           [
@@ -2206,46 +2299,33 @@ app.post(
           ]
         );
 
-      await client.query(
-        "COMMIT"
-      );
+      await client.query("COMMIT");
 
       res.json({
         ok: true,
-
-        status:
-          "pending",
-
+        status: "pending",
         redemptionId:
-          String(
-            redemption.rows[0].id
-          ),
-
+          String(redemption.rows[0].id),
         message:
-          "Zgłoszenie nagrody przyjęte."
+          "Nagroda została zarezerwowana i oczekuje na zatwierdzenie."
       });
     } catch (error) {
-      await client.query(
-        "ROLLBACK"
-      );
+      await client.query("ROLLBACK");
 
       console.error(
         "Reward redeem:",
         error
       );
 
-      res
-        .status(500)
-        .json({
-          error:
-            "Reward redeem failed"
-        });
+      res.status(500).json({
+        error:
+          "Nie udało się utworzyć zgłoszenia"
+      });
     } finally {
       client.release();
     }
   }
 );
-
 //
 // STARS SHOP
 //
