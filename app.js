@@ -1,5 +1,12 @@
 const q = (s) => document.querySelector(s);
-const R = q("#r");
+const qa = (s) => [...document.querySelectorAll(s)];
+
+const tg = window.Telegram?.WebApp;
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
 
 const SYMBOLS = [
   "🍒",
@@ -16,15 +23,9 @@ const SPIN_TARGET = 25;
 
 let state = null;
 let spinning = false;
+let referralData = null;
 
-const tg = window.Telegram?.WebApp;
-
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
-
-function telegramHeaders() {
+function headers() {
   return {
     "Content-Type": "application/json",
     "X-Telegram-Init-Data": tg?.initData || ""
@@ -35,16 +36,23 @@ async function api(url, options = {}) {
   const response = await fetch(url, {
     ...options,
     headers: {
-      ...telegramHeaders(),
+      ...headers(),
       ...(options.headers || {})
     }
   });
 
-  const data = await response.json();
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
 
   if (!response.ok) {
     throw new Error(
-      data.error || "Błąd API"
+      data.error ||
+      "Błąd połączenia"
     );
   }
 
@@ -54,7 +62,8 @@ async function api(url, options = {}) {
 function randomSymbol() {
   return SYMBOLS[
     Math.floor(
-      Math.random() * SYMBOLS.length
+      Math.random() *
+      SYMBOLS.length
     )
   ];
 }
@@ -66,71 +75,115 @@ function randomBoard() {
   );
 }
 
-function draw(symbols = randomBoard()) {
-  R.innerHTML = symbols
-    .map(
-      (x) => `<i>${x}</i>`
-    )
-    .join("");
+function drawReels(
+  symbols = randomBoard()
+) {
+  q("#r").innerHTML =
+    symbols
+      .map(
+        (symbol) =>
+          `<i>${symbol}</i>`
+      )
+      .join("");
 }
 
-function render(u) {
-  state = u;
+function renderUser(user) {
+  state = user;
 
   q("#c").textContent =
     Number(
-      u.coins || 0
+      user.coins || 0
     ).toLocaleString("pl-PL");
 
   q("#e").textContent =
-    `${u.energy}/${u.maxEnergy}`;
+    `${user.energy}/${user.maxEnergy}`;
 
   q("#n").textContent =
-    u.taps;
+    Number(
+      user.taps || 0
+    ).toLocaleString("pl-PL");
 
-  const percent =
+  q("#level").textContent =
+    user.level || 1;
+
+  q("#xp").textContent =
+    Number(
+      user.xp || 0
+    ).toLocaleString("pl-PL");
+
+  q("#rp").textContent =
+    Number(
+      user.rewardPoints || 0
+    ).toLocaleString("pl-PL");
+
+  q("#free-spins").textContent =
+    user.freeSpins || 0;
+
+  q("#reward-balance").textContent =
+    `${Number(
+      user.rewardPoints || 0
+    ).toLocaleString("pl-PL")} RP`;
+
+  const progress =
     Math.min(
       100,
       Math.round(
-        (u.spinProgress /
-          SPIN_TARGET) *
-          100
+        (
+          user.spinProgress /
+          SPIN_TARGET
+        ) * 100
       )
     );
 
-  q("#p").value = percent;
+  q("#p").value =
+    progress;
+
+  q("#spin-progress").textContent =
+    `${user.spinProgress}/${SPIN_TARGET}`;
+
+  const boostText = [];
+
+  if (user.x2Active) {
+    boostText.push("x2");
+  }
+
+  if (user.vipActive) {
+    boostText.push("VIP");
+  }
+
+  q("#boost").textContent =
+    boostText.length
+      ? boostText.join(" + ")
+      : "—";
 
   const canSpin =
-    u.freeSpins > 0 ||
-    u.spinProgress >=
+    user.freeSpins > 0 ||
+    user.spinProgress >=
       SPIN_TARGET;
 
   q("#s").disabled =
     !canSpin || spinning;
 
-  if (u.freeSpins > 0) {
+  if (user.freeSpins > 0) {
     q("#s").textContent =
-      `🎁 LUCKY SPIN — BONUS x${u.freeSpins}`;
+      `🎁 LUCKY SPIN — BONUS x${user.freeSpins}`;
   } else if (
-    u.spinProgress >=
+    user.spinProgress >=
     SPIN_TARGET
   ) {
     q("#s").textContent =
       "🎰 LUCKY SPIN — GOTOWY!";
   } else {
     q("#s").textContent =
-      `🎰 LUCKY SPIN ${u.spinProgress}/${SPIN_TARGET}`;
+      `🎰 LUCKY SPIN ${user.spinProgress}/${SPIN_TARGET}`;
   }
 }
 
 function animateTap() {
-  const cells = [
-    ...R.querySelectorAll("i")
-  ];
+  const cells =
+    qa("#r i");
 
-  if (!cells.length) {
-    return;
-  }
+  if (!cells.length) return;
 
   const amount =
     2 +
@@ -147,7 +200,7 @@ function animateTap() {
       cells[
         Math.floor(
           Math.random() *
-            cells.length
+          cells.length
         )
       ];
 
@@ -164,253 +217,625 @@ function animateTap() {
   }
 }
 
-async function load() {
+async function loadUser() {
   try {
     const user =
       await api("/api/me");
 
-    render(user);
+    renderUser(user);
 
-    if (user.freeSpins > 0) {
-      q("#m").textContent =
-        `🎁 Masz ${user.freeSpins} bonusowych Lucky Spinów`;
-    }
+    q("#m").textContent =
+      user.freeSpins > 0
+        ? `🎁 Masz ${user.freeSpins} bonusowych spinów`
+        : "Tapnij i naładuj Lucky Spin!";
   } catch (error) {
     console.error(error);
 
     q("#m").textContent =
-      "❌ Nie udało się zalogować przez Telegram";
+      "❌ Nie udało się zalogować";
 
     q("#t").disabled = true;
     q("#s").disabled = true;
-    q("#shop").disabled = true;
+  }
+}
+
+async function tap() {
+  if (spinning) return;
+
+  animateTap();
+
+  if (navigator.vibrate) {
+    navigator.vibrate(18);
+  }
+
+  try {
+    const user =
+      await api(
+        "/api/tap",
+        {
+          method: "POST"
+        }
+      );
+
+    renderUser(user);
+
+    if (
+      user.freeSpins > 0
+    ) {
+      q("#m").textContent =
+        `🎁 Bonusowe spiny: ${user.freeSpins}`;
+    } else if (
+      user.spinProgress >=
+      SPIN_TARGET
+    ) {
+      q("#m").textContent =
+        "🔥 Lucky Spin gotowy!";
+    } else {
+      q("#m").textContent =
+        `Jeszcze ${
+          SPIN_TARGET -
+          user.spinProgress
+        } tapów do spinu`;
+    }
+  } catch (error) {
+    q("#m").textContent =
+      `❌ ${error.message}`;
+  }
+}
+
+async function spin() {
+  if (
+    spinning ||
+    !state
+  ) {
+    return;
+  }
+
+  const canSpin =
+    state.freeSpins > 0 ||
+    state.spinProgress >=
+      SPIN_TARGET;
+
+  if (!canSpin) return;
+
+  spinning = true;
+
+  q("#t").disabled = true;
+  q("#s").disabled = true;
+
+  q("#m").textContent =
+    "🎰 Kręcimy...";
+
+  const animation =
+    setInterval(
+      () =>
+        drawReels(
+          randomBoard()
+        ),
+      90
+    );
+
+  try {
+    const result =
+      await api(
+        "/api/spin",
+        {
+          method: "POST"
+        }
+      );
+
+    await new Promise(
+      (resolve) =>
+        setTimeout(
+          resolve,
+          1200
+        )
+    );
+
+    clearInterval(animation);
+
+    drawReels(
+      result.reels
+    );
+
+    renderUser(
+      result
+    );
+
+    q("#m").textContent =
+      `💰 WYGRANA +${result.win} MONET!`;
+
+    if (navigator.vibrate) {
+      navigator.vibrate([
+        70,
+        40,
+        100
+      ]);
+    }
+  } catch (error) {
+    clearInterval(animation);
+
+    q("#m").textContent =
+      `❌ ${error.message}`;
+  } finally {
+    spinning = false;
+
+    q("#t").disabled = false;
+
+    if (state) {
+      renderUser(state);
+    }
+  }
+}
+
+async function claimDaily() {
+  try {
+    const result =
+      await api(
+        "/api/daily/claim",
+        {
+          method: "POST"
+        }
+      );
+
+    renderUser(
+      result.user
+    );
+
+    alert(
+      `🎁 Daily Bonus\n\n+${result.reward.coins} Coins\n+${result.reward.rewardPoints} RP\nStreak: ${result.reward.streak}`
+    );
+  } catch (error) {
+    alert(
+      error.message
+    );
+  }
+}
+
+async function buyCoinProduct(
+  key
+) {
+  try {
+    const result =
+      await api(
+        `/api/shop/coins/${key}`,
+        {
+          method: "POST"
+        }
+      );
+
+    renderUser(
+      result.user
+    );
+
+    alert(
+      "✅ Zakupiony!"
+    );
+  } catch (error) {
+    alert(
+      error.message
+    );
+  }
+}
+
+async function buyStarProduct(
+  key
+) {
+  try {
+    const result =
+      await api(
+        `/api/shop/stars/${key}`,
+        {
+          method: "POST"
+        }
+      );
+
+    if (!tg) {
+      alert(
+        "Zakupy Stars działają w Telegramie."
+      );
+
+      return;
+    }
+
+    tg.openInvoice(
+      result.invoiceLink,
+      async (status) => {
+        if (
+          status === "paid"
+        ) {
+          q("#m").textContent =
+            "⭐ Płatność przyjęta...";
+
+          setTimeout(
+            async () => {
+              await loadUser();
+
+              alert(
+                "🎁 Zakup dodany do konta!"
+              );
+            },
+            1500
+          );
+        }
+
+        if (
+          status === "cancelled"
+        ) {
+          alert(
+            "Płatność anulowana."
+          );
+        }
+
+        if (
+          status === "failed"
+        ) {
+          alert(
+            "Płatność nie powiodła się."
+          );
+        }
+      }
+    );
+  } catch (error) {
+    alert(
+      error.message
+    );
+  }
+}
+
+async function loadMissions() {
+  try {
+    const missions =
+      await api(
+        "/api/missions"
+      );
+
+    q("#missions-list").innerHTML =
+      missions
+        .map(
+          (mission) => `
+            <div class="list-card">
+              <div>
+                <strong>
+                  ${mission.title}
+                </strong>
+
+                <p>
+                  ${mission.progress}/${mission.target}
+                </p>
+
+                <small>
+                  +${mission.reward.coins} Coins ·
+                  +${mission.reward.rewardPoints} RP ·
+                  +${mission.reward.xp} XP
+                </small>
+              </div>
+
+              <button
+                class="mission-claim"
+                data-mission="${mission.key}"
+                ${
+                  !mission.completed ||
+                  mission.claimed
+                    ? "disabled"
+                    : ""
+                }
+              >
+                ${
+                  mission.claimed
+                    ? "Odebrane"
+                    : "Odbierz"
+                }
+              </button>
+            </div>
+          `
+        )
+        .join("");
+
+    qa(
+      ".mission-claim"
+    ).forEach(
+      (button) => {
+        button.onclick =
+          async () => {
+            try {
+              const result =
+                await api(
+                  `/api/missions/${button.dataset.mission}/claim`,
+                  {
+                    method:
+                      "POST"
+                  }
+                );
+
+              renderUser(
+                result.user
+              );
+
+              await loadMissions();
+
+              alert(
+                "🎯 Nagroda odebrana!"
+              );
+            } catch (error) {
+              alert(
+                error.message
+              );
+            }
+          };
+      }
+    );
+  } catch (error) {
+    q("#missions-list").innerHTML =
+      `<p>${error.message}</p>`;
+  }
+}
+
+async function loadLeaderboard() {
+  try {
+    const list =
+      await api(
+        "/api/leaderboard"
+      );
+
+    q("#leaderboard").innerHTML =
+      list
+        .map(
+          (player) => `
+            <div class="list-card leaderboard-row">
+              <strong>
+                #${player.rank}
+              </strong>
+
+              <span>
+                ${player.name}
+              </span>
+
+              <b>
+                ${Number(
+                  player.weeklyCoins
+                ).toLocaleString("pl-PL")}
+              </b>
+            </div>
+          `
+        )
+        .join("");
+  } catch (error) {
+    q("#leaderboard").innerHTML =
+      `<p>${error.message}</p>`;
+  }
+}
+
+async function loadReferrals() {
+  try {
+    referralData =
+      await api(
+        "/api/referrals"
+      );
+
+    q("#ref-count").textContent =
+      `Poleceni: ${referralData.referrals}`;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function shareReferral() {
+  if (!referralData) {
+    await loadReferrals();
+  }
+
+  if (!referralData) return;
+
+  const botUsername =
+    "TU_WPISZ_USERNAME_BOTA";
+
+  const link =
+    `https://t.me/${botUsername}?startapp=${referralData.startParam}`;
+
+  const text =
+    "🎰 Zagraj w Lucky Tap Slots i odbierz bonus!";
+
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(
+      `https://t.me/share/url?url=${encodeURIComponent(
+        link
+      )}&text=${encodeURIComponent(
+        text
+      )}`
+    );
+  } else {
+    navigator.clipboard
+      ?.writeText(link);
+
+    alert(
+      `Link skopiowany:\n${link}`
+    );
+  }
+}
+
+async function loadRewards() {
+  try {
+    const data =
+      await api(
+        "/api/rewards"
+      );
+
+    q("#reward-balance").textContent =
+      `${Number(
+        data.balance
+      ).toLocaleString("pl-PL")} RP`;
+
+    q("#rewards-list").innerHTML =
+      data.rewards
+        .map(
+          (reward) => `
+            <div class="list-card">
+              <div>
+                <strong>
+                  🎁 ${reward.label}
+                </strong>
+
+                <p>
+                  ${reward.cost} RP
+                </p>
+
+                <small>
+                  Wymagany Level ${reward.minLevel}
+                </small>
+              </div>
+
+              <button
+                class="reward-redeem"
+                data-reward="${reward.key}"
+                ${
+                  reward.available
+                    ? ""
+                    : "disabled"
+                }
+              >
+                Odbierz
+              </button>
+            </div>
+          `
+        )
+        .join("");
+
+    qa(
+      ".reward-redeem"
+    ).forEach(
+      (button) => {
+        button.onclick =
+          async () => {
+            const confirmed =
+              confirm(
+                "Wysłać zgłoszenie nagrody?"
+              );
+
+            if (!confirmed) {
+              return;
+            }
+
+            try {
+              const result =
+                await api(
+                  `/api/rewards/${button.dataset.reward}/redeem`,
+                  {
+                    method:
+                      "POST"
+                  }
+                );
+
+              alert(
+                `✅ ${result.message}\nID: ${result.redemptionId}`
+              );
+
+              await loadUser();
+              await loadRewards();
+            } catch (error) {
+              alert(
+                error.message
+              );
+            }
+          };
+      }
+    );
+  } catch (error) {
+    q("#rewards-list").innerHTML =
+      `<p>${error.message}</p>`;
+  }
+}
+
+function showPage(name) {
+  qa(".page").forEach(
+    (page) =>
+      page.classList.remove(
+        "active"
+      )
+  );
+
+  qa(".nav-btn").forEach(
+    (button) =>
+      button.classList.remove(
+        "active"
+      )
+  );
+
+  q(
+    `#page-${name}`
+  )?.classList.add(
+    "active"
+  );
+
+  q(
+    `.nav-btn[data-page="${name}"]`
+  )?.classList.add(
+    "active"
+  );
+
+  if (
+    name === "missions"
+  ) {
+    loadMissions();
+  }
+
+  if (
+    name === "ranking"
+  ) {
+    loadLeaderboard();
+    loadReferrals();
+  }
+
+  if (
+    name === "rewards"
+  ) {
+    loadRewards();
   }
 }
 
 q("#t").onclick =
-  async () => {
-    if (spinning) {
-      return;
-    }
-
-    animateTap();
-
-    if (navigator.vibrate) {
-      navigator.vibrate(20);
-    }
-
-    try {
-      const user =
-        await api(
-          "/api/tap",
-          {
-            method: "POST"
-          }
-        );
-
-      render(user);
-
-      if (
-        user.freeSpins > 0
-      ) {
-        q("#m").textContent =
-          `🎁 Masz ${user.freeSpins} bonusowych spinów`;
-      } else if (
-        user.spinProgress >=
-        SPIN_TARGET
-      ) {
-        q("#m").textContent =
-          "🔥 Lucky Spin gotowy — kręć!";
-      } else {
-        q("#m").textContent =
-          `Jeszcze ${
-            SPIN_TARGET -
-            user.spinProgress
-          } tapów do spinu`;
-      }
-    } catch (error) {
-      console.error(error);
-
-      q("#m").textContent =
-        "❌ Tap nie został zapisany";
-    }
-  };
+  tap;
 
 q("#s").onclick =
-  async () => {
-    if (
-      spinning ||
-      !state
-    ) {
-      return;
-    }
+  spin;
 
-    const canSpin =
-      state.freeSpins > 0 ||
-      state.spinProgress >=
-        SPIN_TARGET;
+q("#daily").onclick =
+  claimDaily;
 
-    if (!canSpin) {
-      return;
-    }
+q("#share-ref").onclick =
+  shareReferral;
 
-    spinning = true;
-
-    q("#s").disabled = true;
-    q("#t").disabled = true;
-
-    q("#m").textContent =
-      "🎰 Kręcimy...";
-
-    if (navigator.vibrate) {
-      navigator.vibrate([
-        40,
-        40,
-        40
-      ]);
-    }
-
-    const animation =
-      setInterval(() => {
-        draw(
-          randomBoard()
+qa(".coin-buy").forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        buyCoinProduct(
+          button.dataset.product
         );
-      }, 90);
+  }
+);
 
-    try {
-      const result =
-        await api(
-          "/api/spin",
-          {
-            method: "POST"
-          }
+qa(".star-buy").forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        buyStarProduct(
+          button.dataset.starProduct
         );
+  }
+);
 
-      await new Promise(
-        (resolve) =>
-          setTimeout(
-            resolve,
-            1200
-          )
-      );
-
-      clearInterval(
-        animation
-      );
-
-      draw(
-        result.reels
-      );
-
-      render(
-        result
-      );
-
-      q("#m").textContent =
-        `💰 WYGRANA +${result.win} MONET!`;
-
-      if (
-        navigator.vibrate
-      ) {
-        navigator.vibrate([
-          70,
-          50,
-          100
-        ]);
-      }
-    } catch (error) {
-      clearInterval(
-        animation
-      );
-
-      console.error(error);
-
-      q("#m").textContent =
-        `❌ ${error.message}`;
-    } finally {
-      spinning = false;
-
-      q("#t").disabled =
-        false;
-
-      if (state) {
-        render(state);
-      }
-    }
-  };
-
-q("#shop").onclick =
-  async () => {
-    const shopBtn =
-      q("#shop");
-
-    shopBtn.disabled = true;
-
-    try {
-      const data =
-        await api(
-          "/api/shop/stars/spins",
-          {
-            method: "POST"
-          }
+qa(".nav-btn").forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        showPage(
+          button.dataset.page
         );
+  }
+);
 
-      if (!tg) {
-        alert(
-          "Zakupy Stars działają tylko wewnątrz Telegrama."
-        );
-
-        return;
-      }
-
-      tg.openInvoice(
-        data.invoiceLink,
-        async (status) => {
-          if (
-            status === "paid"
-          ) {
-            q("#m").textContent =
-              "⭐ Płatność przyjęta! Sprawdzam bonus...";
-
-            setTimeout(
-              async () => {
-                await load();
-              },
-              1500
-            );
-          }
-
-          if (
-            status ===
-            "cancelled"
-          ) {
-            q("#m").textContent =
-              "Płatność anulowana.";
-          }
-
-          if (
-            status ===
-            "failed"
-          ) {
-            q("#m").textContent =
-              "Płatność nie powiodła się.";
-          }
-        }
-      );
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        error.message ||
-          "Błąd płatności"
-      );
-    } finally {
-      shopBtn.disabled =
-        false;
-    }
-  };
-
-draw([
+drawReels([
   "🍒",
   "🍋",
   "💎",
@@ -422,4 +847,4 @@ draw([
   "🍒"
 ]);
 
-load();
+loadUser();;
