@@ -627,37 +627,43 @@ async function loadReferrals() {
     console.error(error);
   }
 }
-
 async function shareReferral() {
   if (!referralData) {
     await loadReferrals();
   }
 
-  if (!referralData) return;
+  if (!referralData) {
+    alert("Nie udało się pobrać linku polecającego.");
+    return;
+  }
 
-  const botUsername =
-    "ACABBACA_bot";
+  const botUsername = "ACABBACA_bot";
 
   const link =
-    `https://t.me/${botUsername}?startapp=${referralData.startParam}`;
+    `https://t.me/${botUsername}?startapp=${encodeURIComponent(
+      referralData.startParam
+    )}`;
 
   const text =
-    "🎰 Zagraj w Lucky Tap Slots i odbierz bonus!";
+    `🎰 Zagraj w Lucky Tap Slots i odbierz bonus!\n\n${link}`;
 
-  if (tg?.openTelegramLink) {
-    tg.openTelegramLink(
-      `https://t.me/share/url?url=${encodeURIComponent(
-        link
-      )}&text=${encodeURIComponent(
-        text
-      )}`
-    );
-  } else {
-    navigator.clipboard
-      ?.writeText(link);
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Lucky Tap Slots",
+        text: text
+      });
+      return;
+    }
+
+    await navigator.clipboard.writeText(link);
 
     alert(
-      `Link skopiowany:\n${link}`
+      `Twój link polecający:\n\n${link}\n\nLink został skopiowany.`
+    );
+  } catch (error) {
+    alert(
+      `Twój link polecający:\n\n${link}`
     );
   }
 }
