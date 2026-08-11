@@ -655,6 +655,168 @@ async function shareReferral() {
 }
 
 async function loadRewards() {
+  async function loadRewardHistory() {
+  try {
+    const history =
+      await api(
+        "/api/rewards/history"
+      );
+
+    const box =
+      q("#reward-history");
+
+    if (!history.length) {
+      box.innerHTML =
+        `
+        <div class="list-card">
+          <small>
+            Nie masz jeszcze żadnych zgłoszeń.
+          </small>
+        </div>
+        `;
+
+      return;
+    }
+
+    box.innerHTML =
+      history
+        .map(item => {
+          let statusText =
+            "⏳ Oczekuje";
+
+          if (
+            item.status ===
+            "approved"
+          ) {
+            statusText =
+              "✅ Zatwierdzono";
+          }
+
+          if (
+            item.status ===
+            "rejected"
+          ) {
+            statusText =
+              "❌ Odrzucono";
+          }
+
+          let extra = "";
+
+          if (
+            item.adminNote
+          ) {
+            extra += `
+              <p>
+                💬 ${escapeHtml(
+                  item.adminNote
+                )}
+              </p>
+            `;
+          }
+
+          if (
+            item.status ===
+              "approved" &&
+            item.fulfillmentCode
+          ) {
+            extra += `
+              <div class="reward-code">
+                <small>
+                  TWÓJ KOD
+                </small>
+
+                <strong>
+                  ${escapeHtml(
+                    item.fulfillmentCode
+                  )}
+                </strong>
+
+                <button
+                  class="copy-reward-code"
+                  data-code="${escapeHtml(
+                    item.fulfillmentCode
+                  )}"
+                >
+                  📋 KOPIUJ
+                </button>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="list-card reward-history-card">
+              <div>
+                <strong>
+                  ${escapeHtml(
+                    item.label
+                  )}
+                </strong>
+
+                <p>
+                  ${statusText}
+                </p>
+
+                <small>
+                  ${Number(
+                    item.cost
+                  ).toLocaleString(
+                    "pl-PL"
+                  )} RP
+                </small>
+
+                ${extra}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+    qa(
+      ".copy-reward-code"
+    ).forEach(button => {
+      button.onclick =
+        async () => {
+          const code =
+            button.dataset.code;
+
+          try {
+            await navigator
+              .clipboard
+              .writeText(code);
+
+            button.textContent =
+              "✅ SKOPIOWANO";
+
+            setTimeout(
+              () => {
+                button.textContent =
+                  "📋 KOPIUJ";
+              },
+              1500
+            );
+          } catch {
+            alert(
+              `Kod: ${code}`
+            );
+          }
+        };
+    });
+  } catch (error) {
+    console.error(
+      "Reward history:",
+      error
+    );
+
+    q("#reward-history").innerHTML =
+      `
+      <div class="list-card">
+        <small>
+          Nie udało się pobrać historii.
+        </small>
+      </div>
+      `;
+  }
+}
   try {
     const data =
       await api(
