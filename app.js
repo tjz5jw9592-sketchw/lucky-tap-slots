@@ -628,7 +628,7 @@ async function shareReferral() {
   if (!referralData) return;
 
   const botUsername =
-    "@ACABBACA_bot";
+    "ACABBACA_bot";
 
   const link =
     `https://t.me/${botUsername}?startapp=${referralData.startParam}`;
