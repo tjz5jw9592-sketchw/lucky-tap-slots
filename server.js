@@ -214,7 +214,7 @@ app.post(
           payment.currency === "XTR" &&
           payment.invoice_payload ===
             "lucky_5_spins" &&
-          payment.total_amount === 50;
+          payment.total_amount === 1;
 
         if (
           validPayment &&
