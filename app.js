@@ -30,30 +30,143 @@ const SYMBOLS = [
 
 const SPIN_TARGET = 25;
 
+//
+// FABUŁA LUCKY CITY
+//
+
+const STORY_CHAPTERS = [
+  {
+    level: 1,
+    title:
+      "Rozdział 1 — Stary Automat",
+    symbol: "🍒",
+    goal:
+      "Uruchom pierwszy automat",
+    text:
+      "Lucky City kiedyś świeciło przez całą noc. Został tylko stary automat i kilka monet. Każdy tap przywraca mu odrobinę mocy.",
+    next:
+      "Dobij do Levelu 2, aby zapalić pierwszy neon."
+  },
+
+  {
+    level: 2,
+    title:
+      "Rozdział 2 — Neonowa Sala",
+    symbol: "🍋",
+    goal:
+      "Przywróć zasilanie Neonowej Sali",
+    text:
+      "Pierwsze neony znowu migają. Lucky twierdzi, że pod kasynem nadal działa stary generator.",
+    next:
+      "Dobij do Levelu 3, aby odnaleźć Dzwon Fortuny."
+  },
+
+  {
+    level: 3,
+    title:
+      "Rozdział 3 — Dzwon Fortuny",
+    symbol: "🔔",
+    goal:
+      "Obudź szczęście Lucky City",
+    text:
+      "W magazynie odnajdujesz złoty dzwon. Podobno jego dźwięk przyciągał największe jackpoty w całym mieście.",
+    next:
+      "Dobij do Levelu 5, aby otworzyć Salę VIP."
+  },
+
+  {
+    level: 5,
+    title:
+      "Rozdział 4 — Sala VIP",
+    symbol: "🍀",
+    goal:
+      "Otwórz zamkniętą Salę VIP",
+    text:
+      "Za ciężkimi drzwiami znajduje się sala dla największych graczy. Na środku leży legendarna Zielona Koniczyna.",
+    next:
+      "Dobij do Levelu 7, aby odnaleźć Gwiazdę Lucky."
+  },
+
+  {
+    level: 7,
+    title:
+      "Rozdział 5 — Gwiazda Lucky",
+    symbol: "⭐",
+    goal:
+      "Odnajdź piąty symbol",
+    text:
+      "Na dachu kasyna zapala się ogromna gwiazda. Lucky City naprawdę zaczyna wracać do życia.",
+    next:
+      "Dobij do Levelu 10, aby wejść do Diamentowego Kasyna."
+  },
+
+  {
+    level: 10,
+    title:
+      "Rozdział 6 — Diamentowe Kasyno",
+    symbol: "💎",
+    goal:
+      "Odbuduj główną salę",
+    text:
+      "W centrum miasta otwiera się Diamentowe Kasyno. W jego sejfie czeka szósty symbol i tajemnicza wiadomość od Mr. Zero.",
+    next:
+      "Dobij do Levelu 15, aby rozpocząć finał."
+  },
+
+  {
+    level: 15,
+    title:
+      "Rozdział 7 — Złota Siódemka",
+    symbol: "7️⃣",
+    goal:
+      "Odzyskaj ostatni symbol",
+    text:
+      "Mr. Zero ukrył Złotą Siódemkę na szczycie Lucky Tower. Siedem symboli musi ponownie połączyć swoje szczęście.",
+    next:
+      "Finał odblokowany. Walcz o najwyższe miejsce w rankingu."
+  }
+];
+
 let state = null;
 let spinning = false;
 let referralData = null;
 
+//
+// API
+//
+
 function headers() {
   return {
-    "Content-Type": "application/json",
-    "X-Telegram-Init-Data": tg?.initData || ""
+    "Content-Type":
+      "application/json",
+
+    "X-Telegram-Init-Data":
+      tg?.initData || ""
   };
 }
 
-async function api(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers(),
-      ...(options.headers || {})
-    }
-  });
+async function api(
+  url,
+  options = {}
+) {
+  const response =
+    await fetch(
+      url,
+      {
+        ...options,
+
+        headers: {
+          ...headers(),
+          ...(options.headers || {})
+        }
+      }
+    );
 
   let data = {};
 
   try {
-    data = await response.json();
+    data =
+      await response.json();
   } catch {
     data = {};
   }
@@ -68,6 +181,10 @@ async function api(url, options = {}) {
   return data;
 }
 
+//
+// SLOT
+//
+
 function randomSymbol() {
   return SYMBOLS[
     Math.floor(
@@ -79,7 +196,9 @@ function randomSymbol() {
 
 function randomBoard() {
   return Array.from(
-    { length: 9 },
+    {
+      length: 9
+    },
     randomSymbol
   );
 }
@@ -87,7 +206,14 @@ function randomBoard() {
 function drawReels(
   symbols = randomBoard()
 ) {
-  q("#r").innerHTML =
+  const reels =
+    q("#r");
+
+  if (!reels) {
+    return;
+  }
+
+  reels.innerHTML =
     symbols
       .map(
         (symbol) =>
@@ -96,13 +222,254 @@ function drawReels(
       .join("");
 }
 
-function renderUser(user) {
-  state = user;
+//
+// FABUŁA
+//
+
+function currentStoryChapter(
+  level
+) {
+  const safeLevel =
+    Number(
+      level || 1
+    );
+
+  let chapter =
+    STORY_CHAPTERS[0];
+
+  for (
+    const item of
+    STORY_CHAPTERS
+  ) {
+    if (
+      safeLevel >=
+      item.level
+    ) {
+      chapter =
+        item;
+    }
+  }
+
+  return chapter;
+}
+
+function nextStoryChapter(
+  level
+) {
+  const safeLevel =
+    Number(
+      level || 1
+    );
+
+  return (
+    STORY_CHAPTERS.find(
+      (item) =>
+        item.level >
+        safeLevel
+    ) ||
+    null
+  );
+}
+
+function ensureStoryCard() {
+  if (
+    q("#story-card")
+  ) {
+    return;
+  }
+
+  const gamePage =
+    q("#page-game");
+
+  if (!gamePage) {
+    return;
+  }
+
+  const playerStrip =
+    gamePage.querySelector(
+      ".player-strip"
+    );
+
+  if (!playerStrip) {
+    return;
+  }
+
+  const card =
+    document.createElement(
+      "section"
+    );
+
+  card.id =
+    "story-card";
+
+  card.className =
+    "list-card story-card";
+
+  card.innerHTML = `
+    <div>
+
+      <small>
+        📖 HISTORIA LUCKY CITY
+      </small>
+
+      <h3 id="story-title">
+        Lucky City
+      </h3>
+
+      <p id="story-text">
+        Ładowanie historii...
+      </p>
+
+      <div class="progress-info">
+
+        <span id="story-goal">
+          Cel
+        </span>
+
+        <strong id="story-symbol">
+          🍒
+        </strong>
+
+      </div>
+
+      <progress
+        id="story-progress"
+        max="100"
+        value="0"
+      ></progress>
+
+      <small id="story-next">
+        —
+      </small>
+
+    </div>
+  `;
+
+  playerStrip
+    .insertAdjacentElement(
+      "afterend",
+      card
+    );
+}
+
+function renderStory(
+  user
+) {
+  ensureStoryCard();
+
+  const chapter =
+    currentStoryChapter(
+      user.level
+    );
+
+  const next =
+    nextStoryChapter(
+      user.level
+    );
+
+  const title =
+    q("#story-title");
+
+  const text =
+    q("#story-text");
+
+  const goal =
+    q("#story-goal");
+
+  const symbol =
+    q("#story-symbol");
+
+  const nextText =
+    q("#story-next");
+
+  const progress =
+    q("#story-progress");
+
+  if (
+    !title ||
+    !text ||
+    !goal ||
+    !symbol ||
+    !nextText ||
+    !progress
+  ) {
+    return;
+  }
+
+  title.textContent =
+    chapter.title;
+
+  text.textContent =
+    chapter.text;
+
+  goal.textContent =
+    chapter.goal;
+
+  symbol.textContent =
+    chapter.symbol;
+
+  nextText.textContent =
+    chapter.next;
+
+  if (!next) {
+    progress.value =
+      100;
+
+    return;
+  }
+
+  const startLevel =
+    chapter.level;
+
+  const endLevel =
+    next.level;
+
+  const currentLevel =
+    Number(
+      user.level || 1
+    );
+
+  const percent =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          (
+            (
+              currentLevel -
+              startLevel
+            ) /
+            (
+              endLevel -
+              startLevel
+            )
+          ) *
+          100
+        )
+      )
+    );
+
+  progress.value =
+    percent;
+}
+
+//
+// GRACZ
+//
+
+function renderUser(
+  user
+) {
+  state =
+    user;
 
   q("#c").textContent =
     Number(
       user.coins || 0
-    ).toLocaleString("pl-PL");
+    ).toLocaleString(
+      "pl-PL"
+    );
 
   q("#e").textContent =
     `${user.energy}/${user.maxEnergy}`;
@@ -110,7 +477,9 @@ function renderUser(user) {
   q("#n").textContent =
     Number(
       user.taps || 0
-    ).toLocaleString("pl-PL");
+    ).toLocaleString(
+      "pl-PL"
+    );
 
   q("#level").textContent =
     user.level || 1;
@@ -118,88 +487,141 @@ function renderUser(user) {
   q("#xp").textContent =
     Number(
       user.xp || 0
-    ).toLocaleString("pl-PL");
+    ).toLocaleString(
+      "pl-PL"
+    );
 
   q("#rp").textContent =
     Number(
       user.rewardPoints || 0
-    ).toLocaleString("pl-PL");
+    ).toLocaleString(
+      "pl-PL"
+    );
 
-  q("#free-spins").textContent =
+  q("#free-spins")
+    .textContent =
     user.freeSpins || 0;
 
-  q("#reward-balance").textContent =
+  q("#reward-balance")
+    .textContent =
     `${Number(
       user.rewardPoints || 0
-    ).toLocaleString("pl-PL")} RP`;
+    ).toLocaleString(
+      "pl-PL"
+    )} RP`;
 
   const progress =
     Math.min(
       100,
       Math.round(
         (
-          (user.spinProgress || 0) /
+          (
+            user.spinProgress ||
+            0
+          ) /
           SPIN_TARGET
-        ) * 100
+        ) *
+        100
       )
     );
 
   q("#p").value =
     progress;
 
-  q("#spin-progress").textContent =
-    `${user.spinProgress || 0}/${SPIN_TARGET}`;
+  q("#spin-progress")
+    .textContent =
+    `${
+      user.spinProgress || 0
+    }/${SPIN_TARGET}`;
 
-  const boostText = [];
+  const boostText =
+    [];
 
-  if (user.x2Active) {
-    boostText.push("x2");
+  if (
+    user.x2Active
+  ) {
+    boostText.push(
+      "x2"
+    );
   }
 
-  if (user.vipActive) {
-    boostText.push("VIP");
+  if (
+    user.vipActive
+  ) {
+    boostText.push(
+      "VIP"
+    );
   }
 
   q("#boost").textContent =
     boostText.length
-      ? boostText.join(" + ")
+      ? boostText.join(
+          " + "
+        )
       : "—";
 
   const canSpin =
-    (user.freeSpins || 0) > 0 ||
-    (user.spinProgress || 0) >=
+    (
+      user.freeSpins ||
+      0
+    ) >
+      0 ||
+    (
+      user.spinProgress ||
+      0
+    ) >=
       SPIN_TARGET;
 
   q("#s").disabled =
-    !canSpin || spinning;
+    !canSpin ||
+    spinning;
 
-  if ((user.freeSpins || 0) > 0) {
+  if (
+    (
+      user.freeSpins ||
+      0
+    ) >
+    0
+  ) {
     q("#s").textContent =
       `🎁 LUCKY SPIN — BONUS x${user.freeSpins}`;
   } else if (
-    (user.spinProgress || 0) >=
+    (
+      user.spinProgress ||
+      0
+    ) >=
     SPIN_TARGET
   ) {
     q("#s").textContent =
       "🎰 LUCKY SPIN — GOTOWY!";
   } else {
     q("#s").textContent =
-      `🎰 LUCKY SPIN ${user.spinProgress || 0}/${SPIN_TARGET}`;
+      `🎰 LUCKY SPIN ${
+        user.spinProgress ||
+        0
+      }/${SPIN_TARGET}`;
   }
+
+  renderStory(
+    user
+  );
 }
 
 function animateTap() {
   const cells =
     qa("#r i");
 
-  if (!cells.length) {
+  if (
+    !cells.length
+  ) {
     return;
   }
 
   const amount =
     2 +
     Math.floor(
-      Math.random() * 3
+      Math.random() *
+      3
     );
 
   for (
@@ -221,10 +643,13 @@ function animateTap() {
     cell.style.transform =
       "scale(1.12)";
 
-    setTimeout(() => {
-      cell.style.transform =
-        "scale(1)";
-    }, 120);
+    setTimeout(
+      () => {
+        cell.style.transform =
+          "scale(1)";
+      },
+      120
+    );
   }
 }
 
@@ -235,10 +660,16 @@ async function loadUser() {
         "/api/me"
       );
 
-    renderUser(user);
+    renderUser(
+      user
+    );
 
     q("#m").textContent =
-      (user.freeSpins || 0) > 0
+      (
+        user.freeSpins ||
+        0
+      ) >
+      0
         ? `🎁 Masz ${user.freeSpins} bonusowych spinów`
         : "Tapnij i naładuj Lucky Spin!";
   } catch (error) {
@@ -250,20 +681,33 @@ async function loadUser() {
     q("#m").textContent =
       "❌ Nie udało się zalogować";
 
-    q("#t").disabled = true;
-    q("#s").disabled = true;
+    q("#t").disabled =
+      true;
+
+    q("#s").disabled =
+      true;
   }
 }
 
+//
+// TAP
+//
+
 async function tap() {
-  if (spinning) {
+  if (
+    spinning
+  ) {
     return;
   }
 
   animateTap();
 
-  if (navigator.vibrate) {
-    navigator.vibrate(18);
+  if (
+    navigator.vibrate
+  ) {
+    navigator.vibrate(
+      18
+    );
   }
 
   try {
@@ -271,19 +715,29 @@ async function tap() {
       await api(
         "/api/tap",
         {
-          method: "POST"
+          method:
+            "POST"
         }
       );
 
-    renderUser(user);
+    renderUser(
+      user
+    );
 
     if (
-      (user.freeSpins || 0) > 0
+      (
+        user.freeSpins ||
+        0
+      ) >
+      0
     ) {
       q("#m").textContent =
         `🎁 Bonusowe spiny: ${user.freeSpins}`;
     } else if (
-      (user.spinProgress || 0) >=
+      (
+        user.spinProgress ||
+        0
+      ) >=
       SPIN_TARGET
     ) {
       q("#m").textContent =
@@ -292,7 +746,10 @@ async function tap() {
       q("#m").textContent =
         `Jeszcze ${
           SPIN_TARGET -
-          (user.spinProgress || 0)
+          (
+            user.spinProgress ||
+            0
+          )
         } tapów do spinu`;
     }
   } catch (error) {
@@ -300,6 +757,10 @@ async function tap() {
       `❌ ${error.message}`;
   }
 }
+
+//
+// SPIN
+//
 
 async function spin() {
   if (
@@ -310,18 +771,31 @@ async function spin() {
   }
 
   const canSpin =
-    (state.freeSpins || 0) > 0 ||
-    (state.spinProgress || 0) >=
+    (
+      state.freeSpins ||
+      0
+    ) >
+      0 ||
+    (
+      state.spinProgress ||
+      0
+    ) >=
       SPIN_TARGET;
 
-  if (!canSpin) {
+  if (
+    !canSpin
+  ) {
     return;
   }
 
-  spinning = true;
+  spinning =
+    true;
 
-  q("#t").disabled = true;
-  q("#s").disabled = true;
+  q("#t").disabled =
+    true;
+
+  q("#s").disabled =
+    true;
 
   q("#m").textContent =
     "🎰 Kręcimy...";
@@ -341,7 +815,8 @@ async function spin() {
       await api(
         "/api/spin",
         {
-          method: "POST"
+          method:
+            "POST"
         }
       );
 
@@ -353,7 +828,9 @@ async function spin() {
         )
     );
 
-    clearInterval(animation);
+    clearInterval(
+      animation
+    );
 
     drawReels(
       result.reels
@@ -366,7 +843,9 @@ async function spin() {
     q("#m").textContent =
       `💰 WYGRANA +${result.win} MONET!`;
 
-    if (navigator.vibrate) {
+    if (
+      navigator.vibrate
+    ) {
       navigator.vibrate([
         70,
         40,
@@ -374,20 +853,32 @@ async function spin() {
       ]);
     }
   } catch (error) {
-    clearInterval(animation);
+    clearInterval(
+      animation
+    );
 
     q("#m").textContent =
       `❌ ${error.message}`;
   } finally {
-    spinning = false;
+    spinning =
+      false;
 
-    q("#t").disabled = false;
+    q("#t").disabled =
+      false;
 
-    if (state) {
-      renderUser(state);
+    if (
+      state
+    ) {
+      renderUser(
+        state
+      );
     }
   }
 }
+
+//
+// DAILY
+//
 
 async function claimDaily() {
   try {
@@ -395,7 +886,8 @@ async function claimDaily() {
       await api(
         "/api/daily/claim",
         {
-          method: "POST"
+          method:
+            "POST"
         }
       );
 
@@ -413,6 +905,10 @@ async function claimDaily() {
   }
 }
 
+//
+// SKLEP COINS
+//
+
 async function buyCoinProduct(
   key
 ) {
@@ -421,7 +917,8 @@ async function buyCoinProduct(
       await api(
         `/api/shop/coins/${key}`,
         {
-          method: "POST"
+          method:
+            "POST"
         }
       );
 
@@ -439,6 +936,10 @@ async function buyCoinProduct(
   }
 }
 
+//
+// SKLEP STARS
+//
+
 async function buyStarProduct(
   key
 ) {
@@ -447,11 +948,14 @@ async function buyStarProduct(
       await api(
         `/api/shop/stars/${key}`,
         {
-          method: "POST"
+          method:
+            "POST"
         }
       );
 
-    if (!tg) {
+    if (
+      !tg
+    ) {
       alert(
         "Zakupy Stars działają w Telegramie."
       );
@@ -461,9 +965,12 @@ async function buyStarProduct(
 
     tg.openInvoice(
       result.invoiceLink,
-      async (status) => {
+      async (
+        status
+      ) => {
         if (
-          status === "paid"
+          status ===
+          "paid"
         ) {
           q("#m").textContent =
             "⭐ Płatność przyjęta...";
@@ -481,7 +988,8 @@ async function buyStarProduct(
         }
 
         if (
-          status === "cancelled"
+          status ===
+          "cancelled"
         ) {
           alert(
             "Płatność anulowana."
@@ -489,7 +997,8 @@ async function buyStarProduct(
         }
 
         if (
-          status === "failed"
+          status ===
+          "failed"
         ) {
           alert(
             "Płatność nie powiodła się."
@@ -504,6 +1013,10 @@ async function buyStarProduct(
   }
 }
 
+//
+// MISJE
+//
+
 async function loadMissions() {
   try {
     const missions =
@@ -511,12 +1024,18 @@ async function loadMissions() {
         "/api/missions"
       );
 
-    q("#missions-list").innerHTML =
+    q(
+      "#missions-list"
+    ).innerHTML =
       missions
         .map(
-          (mission) => `
+          (
+            mission
+          ) => `
             <div class="list-card">
+
               <div>
+
                 <strong>
                   ${escapeHtml(
                     mission.title
@@ -532,13 +1051,16 @@ async function loadMissions() {
                   +${mission.reward.rewardPoints} RP ·
                   +${mission.reward.xp} XP
                 </small>
+
               </div>
 
               <button
                 class="mission-claim"
+
                 data-mission="${escapeHtml(
                   mission.key
                 )}"
+
                 ${
                   !mission.completed ||
                   mission.claimed
@@ -546,12 +1068,15 @@ async function loadMissions() {
                     : ""
                 }
               >
+
                 ${
                   mission.claimed
                     ? "Odebrane"
                     : "Odbierz"
                 }
+
               </button>
+
             </div>
           `
         )
@@ -560,7 +1085,9 @@ async function loadMissions() {
     qa(
       ".mission-claim"
     ).forEach(
-      (button) => {
+      (
+        button
+      ) => {
         button.onclick =
           async () => {
             try {
@@ -584,7 +1111,9 @@ async function loadMissions() {
               alert(
                 "🎯 Nagroda odebrana!"
               );
-            } catch (error) {
+            } catch (
+              error
+            ) {
               alert(
                 error.message
               );
@@ -592,13 +1121,21 @@ async function loadMissions() {
           };
       }
     );
-  } catch (error) {
-    q("#missions-list").innerHTML =
+  } catch (
+    error
+  ) {
+    q(
+      "#missions-list"
+    ).innerHTML =
       `<p>${escapeHtml(
         error.message
       )}</p>`;
   }
 }
+
+//
+// RANKING
+//
 
 async function loadLeaderboard() {
   try {
@@ -607,14 +1144,20 @@ async function loadLeaderboard() {
         "/api/leaderboard"
       );
 
-    q("#leaderboard").innerHTML =
+    q(
+      "#leaderboard"
+    ).innerHTML =
       list
         .map(
-          (player) => `
+          (
+            player
+          ) => `
             <div class="list-card leaderboard-row">
+
               <strong>
                 #${Number(
-                  player.rank || 0
+                  player.rank ||
+                  0
                 )}
               </strong>
 
@@ -626,20 +1169,32 @@ async function loadLeaderboard() {
 
               <b>
                 ${Number(
-                  player.weeklyCoins || 0
-                ).toLocaleString("pl-PL")}
+                  player.weeklyCoins ||
+                  0
+                ).toLocaleString(
+                  "pl-PL"
+                )}
               </b>
+
             </div>
           `
         )
         .join("");
-  } catch (error) {
-    q("#leaderboard").innerHTML =
+  } catch (
+    error
+  ) {
+    q(
+      "#leaderboard"
+    ).innerHTML =
       `<p>${escapeHtml(
         error.message
       )}</p>`;
   }
 }
+
+//
+// REFERENCJE
+//
 
 async function loadReferrals() {
   try {
@@ -648,54 +1203,81 @@ async function loadReferrals() {
         "/api/referrals"
       );
 
-    q("#ref-code").textContent =
-      referralData.referralCode ||
+    q(
+      "#ref-code"
+    ).textContent =
+      referralData
+        .referralCode ||
       "—";
 
-    q("#ref-count").textContent =
+    q(
+      "#ref-count"
+    ).textContent =
       `Poleceni: ${Number(
-        referralData.referrals || 0
+        referralData
+          .referrals ||
+        0
       )}`;
 
-    q("#ref-my-reward").textContent =
+    q(
+      "#ref-my-reward"
+    ).textContent =
       `🪙 ${Number(
-        referralData.rewards
-          ?.referrerCoins || 0
+        referralData
+          .rewards
+          ?.referrerCoins ||
+        0
       ).toLocaleString(
         "pl-PL"
       )} Coins + 🎁 ${Number(
-        referralData.rewards
-          ?.referrerRP || 0
+        referralData
+          .rewards
+          ?.referrerRP ||
+        0
       ).toLocaleString(
         "pl-PL"
       )} RP`;
 
-    q("#ref-friend-reward").textContent =
+    q(
+      "#ref-friend-reward"
+    ).textContent =
       `🪙 ${Number(
-        referralData.rewards
-          ?.invitedCoins || 0
+        referralData
+          .rewards
+          ?.invitedCoins ||
+        0
       ).toLocaleString(
         "pl-PL"
       )} Coins`;
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
     console.error(
       "Referrals:",
       error
     );
 
-    referralData = null;
+    referralData =
+      null;
 
-    q("#ref-code").textContent =
+    q(
+      "#ref-code"
+    ).textContent =
       "Błąd";
   }
 }
 
 async function shareReferral() {
-  if (!referralData) {
+  if (
+    !referralData
+  ) {
     await loadReferrals();
   }
 
-  if (!referralData) {
+  if (
+    !referralData
+  ) {
     alert(
       "Nie udało się pobrać linku polecającego."
     );
@@ -703,7 +1285,10 @@ async function shareReferral() {
     return;
   }
 
-  if (!referralData.startParam) {
+  if (
+    !referralData
+      .startParam
+  ) {
     alert(
       "Brak parametru linku polecającego."
     );
@@ -716,31 +1301,40 @@ async function shareReferral() {
 
   const link =
     `https://t.me/${botUsername}?startapp=${encodeURIComponent(
-      referralData.startParam
+      referralData
+        .startParam
     )}`;
 
   const text =
     `🎰 Zagraj w Lucky Tap Slots i odbierz bonus!\n\n${link}`;
 
   try {
-    if (navigator.share) {
+    if (
+      navigator.share
+    ) {
       await navigator.share({
         title:
           "Lucky Tap Slots",
+
         text
       });
 
       return;
     }
 
-    await navigator.clipboard.writeText(
-      link
-    );
+    await navigator
+      .clipboard
+      .writeText(
+        link
+      );
 
     alert(
       `Twój link polecający:\n\n${link}\n\nLink został skopiowany.`
     );
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
     if (
       error?.name ===
       "AbortError"
@@ -754,11 +1348,19 @@ async function shareReferral() {
   }
 }
 
+//
+// HISTORIA NAGRÓD
+//
+
 async function loadRewardHistory() {
   const box =
-    q("#reward-history");
+    q(
+      "#reward-history"
+    );
 
-  if (!box) {
+  if (
+    !box
+  ) {
     return;
   }
 
@@ -769,14 +1371,18 @@ async function loadRewardHistory() {
       );
 
     if (
-      !Array.isArray(history) ||
+      !Array.isArray(
+        history
+      ) ||
       !history.length
     ) {
       box.innerHTML = `
         <div class="list-card">
+
           <small>
             Nie masz jeszcze żadnych zgłoszeń.
           </small>
+
         </div>
       `;
 
@@ -786,7 +1392,9 @@ async function loadRewardHistory() {
     box.innerHTML =
       history
         .map(
-          (item) => {
+          (
+            item
+          ) => {
             let statusText =
               "⏳ Oczekuje";
 
@@ -806,9 +1414,12 @@ async function loadRewardHistory() {
                 "❌ Odrzucono";
             }
 
-            let extra = "";
+            let extra =
+              "";
 
-            if (item.adminNote) {
+            if (
+              item.adminNote
+            ) {
               extra += `
                 <p>
                   💬 ${escapeHtml(
@@ -825,6 +1436,7 @@ async function loadRewardHistory() {
             ) {
               extra += `
                 <div class="reward-code">
+
                   <small>
                     TWÓJ KOD
                   </small>
@@ -837,19 +1449,23 @@ async function loadRewardHistory() {
 
                   <button
                     class="copy-reward-code"
+
                     data-code="${escapeHtml(
                       item.fulfillmentCode
                     )}"
                   >
                     📋 KOPIUJ
                   </button>
+
                 </div>
               `;
             }
 
             return `
               <div class="list-card reward-history-card">
+
                 <div>
+
                   <strong>
                     ${escapeHtml(
                       item.label
@@ -862,14 +1478,17 @@ async function loadRewardHistory() {
 
                   <small>
                     ${Number(
-                      item.cost || 0
+                      item.cost ||
+                      0
                     ).toLocaleString(
                       "pl-PL"
                     )} RP
                   </small>
 
                   ${extra}
+
                 </div>
+
               </div>
             `;
           }
@@ -879,11 +1498,15 @@ async function loadRewardHistory() {
     qa(
       ".copy-reward-code"
     ).forEach(
-      (button) => {
+      (
+        button
+      ) => {
         button.onclick =
           async () => {
             const code =
-              button.dataset.code;
+              button
+                .dataset
+                .code;
 
             try {
               await navigator
@@ -902,6 +1525,7 @@ async function loadRewardHistory() {
                 },
                 1500
               );
+
             } catch {
               alert(
                 `Kod: ${code}`
@@ -910,7 +1534,10 @@ async function loadRewardHistory() {
           };
       }
     );
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
     console.error(
       "Reward history:",
       error
@@ -918,13 +1545,19 @@ async function loadRewardHistory() {
 
     box.innerHTML = `
       <div class="list-card">
+
         <small>
           Nie udało się pobrać historii.
         </small>
+
       </div>
     `;
   }
 }
+
+//
+// REWARD CENTER
+//
 
 async function loadRewards() {
   try {
@@ -933,9 +1566,12 @@ async function loadRewards() {
         "/api/rewards"
       );
 
-    q("#reward-balance").textContent =
+    q(
+      "#reward-balance"
+    ).textContent =
       `${Number(
-        data.balance || 0
+        data.balance ||
+        0
       ).toLocaleString(
         "pl-PL"
       )} RP`;
@@ -947,12 +1583,18 @@ async function loadRewards() {
         ? data.rewards
         : [];
 
-    q("#rewards-list").innerHTML =
+    q(
+      "#rewards-list"
+    ).innerHTML =
       rewards
         .map(
-          (reward) => `
+          (
+            reward
+          ) => `
             <div class="list-card">
+
               <div>
+
                 <strong>
                   🎁 ${escapeHtml(
                     reward.label
@@ -961,7 +1603,8 @@ async function loadRewards() {
 
                 <p>
                   ${Number(
-                    reward.cost || 0
+                    reward.cost ||
+                    0
                   ).toLocaleString(
                     "pl-PL"
                   )} RP
@@ -969,16 +1612,20 @@ async function loadRewards() {
 
                 <small>
                   Wymagany Level ${Number(
-                    reward.minLevel || 1
+                    reward.minLevel ||
+                    1
                   )}
                 </small>
+
               </div>
 
               <button
                 class="reward-redeem"
+
                 data-reward="${escapeHtml(
                   reward.key
                 )}"
+
                 ${
                   reward.available
                     ? ""
@@ -987,6 +1634,7 @@ async function loadRewards() {
               >
                 Odbierz
               </button>
+
             </div>
           `
         )
@@ -995,7 +1643,9 @@ async function loadRewards() {
     qa(
       ".reward-redeem"
     ).forEach(
-      (button) => {
+      (
+        button
+      ) => {
         button.onclick =
           async () => {
             const confirmed =
@@ -1003,7 +1653,9 @@ async function loadRewards() {
                 "Wysłać zgłoszenie nagrody?"
               );
 
-            if (!confirmed) {
+            if (
+              !confirmed
+            ) {
               return;
             }
 
@@ -1014,7 +1666,9 @@ async function loadRewards() {
               const result =
                 await api(
                   `/api/rewards/${encodeURIComponent(
-                    button.dataset.reward
+                    button
+                      .dataset
+                      .reward
                   )}/redeem`,
                   {
                     method:
@@ -1032,7 +1686,10 @@ async function loadRewards() {
                 loadRewards(),
                 loadRewardHistory()
               ]);
-            } catch (error) {
+
+            } catch (
+              error
+            ) {
               alert(
                 error.message
               );
@@ -1043,30 +1700,49 @@ async function loadRewards() {
           };
       }
     );
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
     console.error(
       "Rewards:",
       error
     );
 
-    q("#rewards-list").innerHTML =
+    q(
+      "#rewards-list"
+    ).innerHTML =
       `<p>${escapeHtml(
         error.message
       )}</p>`;
   }
 }
 
-function showPage(name) {
-  qa(".page").forEach(
-    (page) => {
+//
+// NAWIGACJA
+//
+
+function showPage(
+  name
+) {
+  qa(
+    ".page"
+  ).forEach(
+    (
+      page
+    ) => {
       page.classList.remove(
         "active"
       );
     }
   );
 
-  qa(".nav-btn").forEach(
-    (button) => {
+  qa(
+    ".nav-btn"
+  ).forEach(
+    (
+      button
+    ) => {
       button.classList.remove(
         "active"
       );
@@ -1109,6 +1785,10 @@ function showPage(name) {
   }
 }
 
+//
+// PRZYCISKI
+//
+
 q("#t").onclick =
   tap;
 
@@ -1124,11 +1804,15 @@ q("#share-ref").onclick =
 qa(
   ".coin-buy"
 ).forEach(
-  (button) => {
+  (
+    button
+  ) => {
     button.onclick =
       () => {
         buyCoinProduct(
-          button.dataset.product
+          button
+            .dataset
+            .product
         );
       };
   }
@@ -1137,11 +1821,15 @@ qa(
 qa(
   ".star-buy"
 ).forEach(
-  (button) => {
+  (
+    button
+  ) => {
     button.onclick =
       () => {
         buyStarProduct(
-          button.dataset.starProduct
+          button
+            .dataset
+            .starProduct
         );
       };
   }
@@ -1150,15 +1838,23 @@ qa(
 qa(
   ".nav-btn"
 ).forEach(
-  (button) => {
+  (
+    button
+  ) => {
     button.onclick =
       () => {
         showPage(
-          button.dataset.page
+          button
+            .dataset
+            .page
         );
       };
   }
 );
+
+//
+// START
+//
 
 drawReels([
   "🍒",
@@ -1171,5 +1867,7 @@ drawReels([
   "🍇",
   "🍒"
 ]);
+
+ensureStoryCard();
 
 loadUser();
