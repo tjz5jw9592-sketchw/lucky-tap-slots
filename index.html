@@ -97,17 +97,16 @@
 
         <div class="story-summary-content">
 
-          <small id="story-chapter">
-            Rozdział 1
+          <small>
+            HISTORIA LUCKY CITY
           </small>
 
           <strong id="story-title">
-            Pierwszy Automat
+            Rozdział 1 — Pierwszy Automat
           </strong>
 
-          <span id="story-next-level">
-            Następny rozdział:
-            Level 2
+          <span id="story-description">
+            Wszystko zaczyna się od jednego starego automatu.
           </span>
 
         </div>
@@ -126,18 +125,17 @@
         ></div>
 
         <p id="m">
-          Tapnij i naładuj
-          Lucky Spin!
+          Tapnij i naładuj Lucky Spin!
         </p>
 
       </section>
 
-      <div class="energy-section">
+      <section class="energy-card">
 
-        <div class="energy-header">
+        <div class="energy-row">
 
           <span>
-            ⚡ ENERGIA
+            ⚡ Energia
           </span>
 
           <strong id="e">
@@ -152,19 +150,7 @@
           value="0"
         ></progress>
 
-        <div class="energy-footer">
-
-          <small>
-            Regeneruje się automatycznie
-          </small>
-
-          <strong id="energy-percent">
-            0%
-          </strong>
-
-        </div>
-
-      </div>
+      </section>
 
       <progress
         id="p"
@@ -202,19 +188,6 @@
       <div class="stats-grid">
 
         <div class="stat-card">
-
-          <span>
-            ENERGIA
-          </span>
-
-          <strong id="e-mobile">
-            5000
-          </strong>
-
-        </div>
-
-        <div class="stat-card">
-
           <span>
             TAPY
           </span>
@@ -222,11 +195,9 @@
           <strong id="n">
             0
           </strong>
-
         </div>
 
         <div class="stat-card">
-
           <span>
             BONUS SPINY
           </span>
@@ -234,11 +205,9 @@
           <strong id="free-spins">
             0
           </strong>
-
         </div>
 
         <div class="stat-card">
-
           <span>
             BOOST
           </span>
@@ -246,7 +215,16 @@
           <strong id="boost">
             —
           </strong>
+        </div>
 
+        <div class="stat-card">
+          <span>
+            MIASTO
+          </span>
+
+          <strong id="city-progress">
+            1/8
+          </strong>
         </div>
 
       </div>
@@ -258,85 +236,82 @@
         🎁 ODBIERZ DAILY BONUS
       </button>
 
-      <button
-        class="secondary-btn nav-shortcut"
-        data-page="story"
-      >
-        🌃 WEJDŹ DO LUCKY CITY
-      </button>
-
     </section>
-        <section
+
+    <section
       id="page-story"
       class="page"
     >
 
-      <h2>
-        🌃 Lucky City
-      </h2>
+      <div class="section-heading">
 
-      <section class="story-main-card">
-
-        <div class="story-main-icon">
-          🌃
-        </div>
-
-        <div class="story-main-content">
-
+        <div>
           <small>
-            AKTUALNY ROZDZIAŁ
+            FABUŁA
           </small>
 
-          <h3 id="story-detail-title">
-            🎰 Pierwszy Automat
-          </h3>
+          <h2>
+            🏙️ Lucky City
+          </h2>
+        </div>
 
-          <p id="story-detail-subtitle">
-            Początek Lucky City
-          </p>
+      </div>
 
-          <p id="story-detail-description">
-            W opuszczonym lokalu znajdujesz stary automat.
-          </p>
+      <section class="city-hero-card">
 
-          <div class="story-objective">
+        <small>
+          AKTUALNY ROZDZIAŁ
+        </small>
 
-            <small>
-              CEL
-            </small>
+        <h3 id="story-detail-title">
+          🎰 Pierwszy Automat
+        </h3>
 
-            <strong id="story-detail-objective">
-              Zdobądź Level 2
-            </strong>
+        <p id="story-detail-description">
+          Zaczynasz w małym lokalu na obrzeżach Lucky City.
+        </p>
 
-          </div>
+        <div class="story-objective">
+
+          <span>
+            Cel
+          </span>
+
+          <strong id="story-detail-objective">
+            Dotrzyj do Levelu 2
+          </strong>
 
         </div>
 
       </section>
 
-      <h3>
-        🗺️ Rozdziały
-      </h3>
-
       <div
         id="story-chapters"
-        class="list"
+        class="city-grid"
       ></div>
 
     </section>
-
-    <section
+        <section
       id="page-shop"
       class="page"
     >
 
-      <h2>
-        🛒 Sklep
-      </h2>
+      <div class="section-heading">
+
+        <div>
+          <small>
+            ULEPSZENIA
+          </small>
+
+          <h2>
+            🛒 Sklep
+          </h2>
+        </div>
+
+      </div>
 
       <h3>
-        Za Coins
+        🪙 Za Coins
       </h3>
 
       <div class="shop-grid">
@@ -452,26 +427,20 @@
       <div class="section-heading">
 
         <div>
-
           <small>
-            DAILY QUESTS
+            CODZIENNE WYZWANIA
           </small>
 
           <h2>
             🎯 Misje
           </h2>
-
         </div>
-
-        <span class="mission-badge">
-          Lucky City
-        </span>
 
       </div>
 
       <p class="info">
-        Wykonuj codzienne misje, zdobywaj Coins,
-        RP i XP oraz odblokowuj kolejne rozdziały.
+        Wykonuj misje, zdobywaj Coins,
+        RP i XP oraz rozwijaj Lucky City.
       </p>
 
       <div
@@ -486,12 +455,23 @@
       class="page"
     >
 
-      <h2>
-        🏆 Ranking tygodniowy
-      </h2>
+      <div class="section-heading">
+
+        <div>
+          <small>
+            TOP GRACZY
+          </small>
+
+          <h2>
+            🏆 Ranking
+          </h2>
+        </div>
+
+      </div>
 
       <p class="info">
-        Najwięcej zdobytych Coins w tym tygodniu.
+        Ranking liczy Coins zdobyte
+        w bieżącym tygodniu.
       </p>
 
       <div
@@ -499,20 +479,24 @@
         class="list"
       ></div>
 
-      <div class="referral-card">
+      <section class="referral-card">
+
+        <small class="eyebrow">
+          PROGRAM POLECEŃ
+        </small>
 
         <h3>
-          👥 Program poleceń
+          👥 Zbuduj ekipę Lucky City
         </h3>
 
         <p>
-          Zaproś znajomego do Lucky Tap Slots.
+          Zaproś znajomych i odbieraj
+          nagrody za każdego nowego gracza.
         </p>
 
         <div class="referral-rewards">
 
           <div>
-
             <small>
               TY DOSTAJESZ
             </small>
@@ -520,11 +504,9 @@
             <strong id="ref-my-reward">
               🪙 500 Coins + 🎁 20 RP
             </strong>
-
           </div>
 
           <div>
-
             <small>
               ZNAJOMY DOSTAJE
             </small>
@@ -532,7 +514,6 @@
             <strong id="ref-friend-reward">
               🪙 250 Coins
             </strong>
-
           </div>
 
         </div>
@@ -549,23 +530,19 @@
 
         </div>
 
-        <div class="referral-actions">
+        <button
+          id="share-ref"
+          class="secondary-btn"
+        >
+          🔗 ZAPROŚ ZNAJOMEGO
+        </button>
 
-          <button
-            id="share-ref"
-            class="secondary-btn"
-          >
-            🔗 ZAPROŚ ZNAJOMEGO
-          </button>
-
-          <button
-            id="copy-ref"
-            class="secondary-btn"
-          >
-            📋 KOPIUJ LINK
-          </button>
-
-        </div>
+        <button
+          id="copy-ref"
+          class="secondary-btn"
+        >
+          📋 KOPIUJ LINK
+        </button>
 
         <div class="referral-stats">
 
@@ -574,7 +551,7 @@
           </small>
 
           <small>
-            Łącznie zdobyte:
+            Zdobyte:
             <strong id="ref-total-earned">
               0 Coins + 0 RP
             </strong>
@@ -582,7 +559,7 @@
 
         </div>
 
-      </div>
+      </section>
 
     </section>
         <section
@@ -590,9 +567,19 @@
       class="page"
     >
 
-      <h2>
-        🎁 Reward Center
-      </h2>
+      <div class="section-heading">
+
+        <div>
+          <small>
+            NAGRODY
+          </small>
+
+          <h2>
+            🎁 Reward Center
+          </h2>
+        </div>
+
+      </div>
 
       <div class="reward-balance">
 
@@ -638,6 +625,7 @@
       class="nav-btn active"
     >
       🎰
+
       <span>
         Gra
       </span>
@@ -647,7 +635,8 @@
       data-page="story"
       class="nav-btn"
     >
-      🌃
+      🏙️
+
       <span>
         Miasto
       </span>
@@ -658,6 +647,7 @@
       class="nav-btn"
     >
       🛒
+
       <span>
         Sklep
       </span>
@@ -668,6 +658,7 @@
       class="nav-btn"
     >
       🎯
+
       <span>
         Misje
       </span>
@@ -678,6 +669,7 @@
       class="nav-btn"
     >
       🏆
+
       <span>
         Ranking
       </span>
@@ -688,6 +680,7 @@
       class="nav-btn"
     >
       🎁
+
       <span>
         Nagrody
       </span>
