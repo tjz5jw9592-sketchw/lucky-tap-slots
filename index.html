@@ -8,7 +8,9 @@
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
 
-  <title>Lucky Tap Slots</title>
+  <title>
+    Lucky Tap Slots
+  </title>
 
   <link
     rel="stylesheet"
@@ -35,7 +37,9 @@
       </div>
 
       <div class="balance-box">
-        <span>MONETY</span>
+        <span>
+          MONETY
+        </span>
 
         <strong id="c">
           0
@@ -52,27 +56,63 @@
       <div class="player-strip">
 
         <div>
-          <span>LEVEL</span>
+          <span>
+            LEVEL
+          </span>
+
           <strong id="level">
             1
           </strong>
         </div>
 
         <div>
-          <span>XP</span>
+          <span>
+            XP
+          </span>
+
           <strong id="xp">
             0
           </strong>
         </div>
 
         <div>
-          <span>RP</span>
+          <span>
+            RP
+          </span>
+
           <strong id="rp">
             0
           </strong>
         </div>
 
       </div>
+
+      <section class="story-summary-card">
+
+        <div class="story-summary-icon">
+          <span id="story-icon">
+            🎰
+          </span>
+        </div>
+
+        <div class="story-summary-content">
+
+          <small id="story-chapter">
+            Rozdział 1
+          </small>
+
+          <strong id="story-title">
+            Pierwszy Automat
+          </strong>
+
+          <span id="story-next-level">
+            Następny rozdział:
+            Level 2
+          </span>
+
+        </div>
+
+      </section>
 
       <section class="machine">
 
@@ -86,10 +126,45 @@
         ></div>
 
         <p id="m">
-          Tapnij i naładuj Lucky Spin!
+          Tapnij i naładuj
+          Lucky Spin!
         </p>
 
       </section>
+
+      <div class="energy-section">
+
+        <div class="energy-header">
+
+          <span>
+            ⚡ ENERGIA
+          </span>
+
+          <strong id="e">
+            0/5000
+          </strong>
+
+        </div>
+
+        <progress
+          id="energy-progress"
+          max="5000"
+          value="0"
+        ></progress>
+
+        <div class="energy-footer">
+
+          <small>
+            Regeneruje się automatycznie
+          </small>
+
+          <strong id="energy-percent">
+            0%
+          </strong>
+
+        </div>
+
+      </div>
 
       <progress
         id="p"
@@ -127,31 +202,51 @@
       <div class="stats-grid">
 
         <div class="stat-card">
-          <span>ENERGIA</span>
-          <strong id="e">
-            0/0
+
+          <span>
+            ENERGIA
+          </span>
+
+          <strong id="e-mobile">
+            5000
           </strong>
+
         </div>
 
         <div class="stat-card">
-          <span>TAPY</span>
+
+          <span>
+            TAPY
+          </span>
+
           <strong id="n">
             0
           </strong>
+
         </div>
 
         <div class="stat-card">
-          <span>BONUS SPINY</span>
+
+          <span>
+            BONUS SPINY
+          </span>
+
           <strong id="free-spins">
             0
           </strong>
+
         </div>
 
         <div class="stat-card">
-          <span>BOOST</span>
+
+          <span>
+            BOOST
+          </span>
+
           <strong id="boost">
             —
           </strong>
+
         </div>
 
       </div>
@@ -162,6 +257,72 @@
       >
         🎁 ODBIERZ DAILY BONUS
       </button>
+
+      <button
+        class="secondary-btn nav-shortcut"
+        data-page="story"
+      >
+        🌃 WEJDŹ DO LUCKY CITY
+      </button>
+
+    </section>
+        <section
+      id="page-story"
+      class="page"
+    >
+
+      <h2>
+        🌃 Lucky City
+      </h2>
+
+      <section class="story-main-card">
+
+        <div class="story-main-icon">
+          🌃
+        </div>
+
+        <div class="story-main-content">
+
+          <small>
+            AKTUALNY ROZDZIAŁ
+          </small>
+
+          <h3 id="story-detail-title">
+            🎰 Pierwszy Automat
+          </h3>
+
+          <p id="story-detail-subtitle">
+            Początek Lucky City
+          </p>
+
+          <p id="story-detail-description">
+            W opuszczonym lokalu znajdujesz stary automat.
+          </p>
+
+          <div class="story-objective">
+
+            <small>
+              CEL
+            </small>
+
+            <strong id="story-detail-objective">
+              Zdobądź Level 2
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <h3>
+        🗺️ Rozdziały
+      </h3>
+
+      <div
+        id="story-chapters"
+        class="list"
+      ></div>
 
     </section>
 
@@ -288,9 +449,30 @@
       class="page"
     >
 
-      <h2>
-        🎯 Misje
-      </h2>
+      <div class="section-heading">
+
+        <div>
+
+          <small>
+            DAILY QUESTS
+          </small>
+
+          <h2>
+            🎯 Misje
+          </h2>
+
+        </div>
+
+        <span class="mission-badge">
+          Lucky City
+        </span>
+
+      </div>
+
+      <p class="info">
+        Wykonuj codzienne misje, zdobywaj Coins,
+        RP i XP oraz odblokowuj kolejne rozdziały.
+      </p>
 
       <div
         id="missions-list"
@@ -307,6 +489,10 @@
       <h2>
         🏆 Ranking tygodniowy
       </h2>
+
+      <p class="info">
+        Najwięcej zdobytych Coins w tym tygodniu.
+      </p>
 
       <div
         id="leaderboard"
@@ -326,44 +512,80 @@
         <div class="referral-rewards">
 
           <div>
-            <small>TY DOSTAJESZ</small>
+
+            <small>
+              TY DOSTAJESZ
+            </small>
+
             <strong id="ref-my-reward">
               🪙 500 Coins + 🎁 20 RP
             </strong>
+
           </div>
 
           <div>
-            <small>ZNAJOMY DOSTAJE</small>
+
+            <small>
+              ZNAJOMY DOSTAJE
+            </small>
+
             <strong id="ref-friend-reward">
               🪙 250 Coins
             </strong>
+
           </div>
 
         </div>
 
-        <p>
-          Twój kod:
+        <div class="referral-code-box">
+
+          <small>
+            TWÓJ KOD
+          </small>
+
           <strong id="ref-code">
             —
           </strong>
-        </p>
 
-        <button
-          id="share-ref"
-          class="secondary-btn"
-        >
-          🔗 ZAPROŚ ZNAJOMEGO
-        </button>
+        </div>
 
-        <small id="ref-count">
-          Poleceni: 0
-        </small>
+        <div class="referral-actions">
+
+          <button
+            id="share-ref"
+            class="secondary-btn"
+          >
+            🔗 ZAPROŚ ZNAJOMEGO
+          </button>
+
+          <button
+            id="copy-ref"
+            class="secondary-btn"
+          >
+            📋 KOPIUJ LINK
+          </button>
+
+        </div>
+
+        <div class="referral-stats">
+
+          <small id="ref-count">
+            Poleceni: 0
+          </small>
+
+          <small>
+            Łącznie zdobyte:
+            <strong id="ref-total-earned">
+              0 Coins + 0 RP
+            </strong>
+          </small>
+
+        </div>
 
       </div>
 
     </section>
-
-    <section
+        <section
       id="page-rewards"
       class="page"
     >
@@ -386,22 +608,25 @@
 
       <p class="info">
         Reward Points zdobywasz za daily,
-        misje i polecenia. Nagrody wymagające
-        realizacji trafiają do weryfikacji.
+        misje i polecenia.
+        Nagrody wymagające realizacji
+        trafiają do weryfikacji.
       </p>
 
       <div
         id="rewards-list"
         class="list"
       ></div>
-<h3>
-  📬 Moje zgłoszenia
-</h3>
 
-<div
-  id="reward-history"
-  class="list"
-></div>
+      <h3>
+        📬 Moje zgłoszenia
+      </h3>
+
+      <div
+        id="reward-history"
+        class="list"
+      ></div>
+
     </section>
 
   </main>
@@ -413,7 +638,19 @@
       class="nav-btn active"
     >
       🎰
-      <span>Gra</span>
+      <span>
+        Gra
+      </span>
+    </button>
+
+    <button
+      data-page="story"
+      class="nav-btn"
+    >
+      🌃
+      <span>
+        Miasto
+      </span>
     </button>
 
     <button
@@ -421,7 +658,9 @@
       class="nav-btn"
     >
       🛒
-      <span>Sklep</span>
+      <span>
+        Sklep
+      </span>
     </button>
 
     <button
@@ -429,7 +668,9 @@
       class="nav-btn"
     >
       🎯
-      <span>Misje</span>
+      <span>
+        Misje
+      </span>
     </button>
 
     <button
@@ -437,7 +678,9 @@
       class="nav-btn"
     >
       🏆
-      <span>Ranking</span>
+      <span>
+        Ranking
+      </span>
     </button>
 
     <button
@@ -445,12 +688,16 @@
       class="nav-btn"
     >
       🎁
-      <span>Nagrody</span>
+      <span>
+        Nagrody
+      </span>
     </button>
 
   </nav>
 
-  <script src="/app.js"></script>
+  <script
+    src="/app.js"
+  ></script>
 
 </body>
 </html>
