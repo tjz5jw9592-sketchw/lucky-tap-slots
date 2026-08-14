@@ -1,6 +1,4 @@
-/* ===== LINIE 1–430 ===== */
-/* LUCKY TAP SLOTS 4.1 */
-/* CZĘŚĆ 1/3 */
+/* LUCKY TAP SLOTS 4.2 */
 
 :root {
   --bg: #070a12;
@@ -48,6 +46,7 @@
 }
 
 html {
+  min-height: 100%;
   background: var(--bg);
 }
 
@@ -111,8 +110,10 @@ body {
 
 button {
   font: inherit;
-
   color: inherit;
+
+  user-select: none;
+  -webkit-user-select: none;
 
   -webkit-tap-highlight-color:
     transparent;
@@ -136,7 +137,7 @@ main {
   padding:
     18px 16px
     calc(
-      112px +
+      105px +
       env(
         safe-area-inset-bottom
       )
@@ -577,7 +578,7 @@ small {
 
   min-width: 0;
 
-  aspect-ratio: 1 / 0.82;
+  aspect-ratio: 1 / 1;
 
   border:
     1px solid
@@ -984,8 +985,6 @@ progress::-moz-progress-bar {
 
   white-space: nowrap;
 }
-/* ===== CZĘŚĆ 2/3 ===== */
-/* LUCKY CITY / SHOP / MISSIONS / RANKING */
 
 /* =========================
    SEKCJE
@@ -1799,8 +1798,6 @@ progress::-moz-progress-bar {
 .referral-stats strong {
   color: var(--text);
 }
-/* ===== CZĘŚĆ 3/3 ===== */
-/* REWARDS / NAV / MOBILE */
 
 /* =========================
    REWARD CENTER
@@ -2081,7 +2078,7 @@ progress::-moz-progress-bar {
 
   bottom:
     calc(
-      8px +
+      4px +
       env(
         safe-area-inset-bottom
       )
@@ -2105,7 +2102,7 @@ progress::-moz-progress-bar {
   width:
     min(
       calc(
-        100% - 16px
+        100% - 10px
       ),
       710px
     );
@@ -2240,7 +2237,7 @@ progress::-moz-progress-bar {
 }
 
 /* =========================
-   DROBNE POPRAWKI
+   PAGE FIXES
    ========================= */
 
 #page-story,
@@ -2259,11 +2256,9 @@ progress::-moz-progress-bar {
   margin-top: 0;
 }
 
-button {
-  user-select: none;
-
-  -webkit-user-select: none;
-}
+/* =========================
+   ANIMACJA SPINU
+   ========================= */
 
 @keyframes luckyPulse {
   0%,
@@ -2290,13 +2285,6 @@ button {
   }
 }
 
-.story-summary-card {
-  animation:
-    luckyPulse
-    4s ease-in-out
-    infinite;
-}
-
 .spin-btn:not(:disabled) {
   animation:
     luckyPulse
@@ -2305,7 +2293,7 @@ button {
 }
 
 /* =========================
-   TABLETY / TELEFONY
+   TELEFONY
    ========================= */
 
 @media (
@@ -2315,6 +2303,14 @@ button {
     padding-left: 12px;
 
     padding-right: 12px;
+
+    padding-bottom:
+      calc(
+        98px +
+        env(
+          safe-area-inset-bottom
+        )
+      );
   }
 
   .topbar {
@@ -2415,11 +2411,30 @@ button {
   }
 
   .shop-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap: 8px;
   }
 
   .shop-card {
-    min-height: 88px;
+    min-height: 105px;
+
+    padding: 13px;
+  }
+
+  .shop-card strong {
+    font-size: 13px;
+  }
+
+  .shop-card span {
+    font-size: 11px;
   }
 
   .city-grid {
@@ -2451,23 +2466,22 @@ button {
   .bottom-nav {
     width:
       calc(
-        100% - 10px
+        100% - 8px
       );
 
-    gap: 2px;
+    gap: 3px;
 
-    padding:
-      5px 3px;
+    padding: 5px;
   }
 
   .nav-btn {
-    min-height: 50px;
+    min-height: 54px;
 
-    font-size: 17px;
+    font-size: 18px;
   }
 
   .nav-btn span {
-    font-size: 7px;
+    font-size: 8px;
   }
 }
 
@@ -2493,14 +2507,18 @@ button {
     font-size: 8px;
   }
 
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+
   .nav-btn {
-    min-height: 48px;
+    min-height: 50px;
 
     font-size: 16px;
   }
 
   .nav-btn span {
-    font-size: 6.5px;
+    font-size: 7px;
   }
 
   .reels i {
