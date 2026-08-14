@@ -1,44 +1,20 @@
 const q = (selector) =>
-  document.querySelector(
-    selector
-  );
+  document.querySelector(selector);
 
 const qa = (selector) =>
-  [
-    ...document.querySelectorAll(
-      selector
-    )
-  ];
+  [...document.querySelectorAll(selector)];
 
 function escapeHtml(value) {
-  return String(
-    value ?? ""
-  )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 const tg =
-  window.Telegram
-    ?.WebApp;
+  window.Telegram?.WebApp;
 
 if (tg) {
   tg.ready();
@@ -57,11 +33,16 @@ const SYMBOLS = [
 ];
 
 const SPIN_TARGET = 25;
+const STORY_CHAPTERS_COUNT = 7;
 
 let state = null;
 let spinning = false;
 let referralData = null;
 let storyData = null;
+
+/* =========================
+   API
+   ========================= */
 
 function headers() {
   return {
@@ -85,10 +66,7 @@ async function api(
 
         headers: {
           ...headers(),
-          ...(
-            options.headers ||
-            {}
-          )
+          ...(options.headers || {})
         }
       }
     );
@@ -112,6 +90,10 @@ async function api(
   return data;
 }
 
+/* =========================
+   SLOT MACHINE
+   ========================= */
+
 function randomSymbol() {
   return SYMBOLS[
     Math.floor(
@@ -123,16 +105,13 @@ function randomSymbol() {
 
 function randomBoard() {
   return Array.from(
-    {
-      length: 9
-    },
+    { length: 9 },
     randomSymbol
   );
 }
 
 function drawReels(
-  symbols =
-    randomBoard()
+  symbols = randomBoard()
 ) {
   const reels =
     q("#r");
@@ -150,63 +129,52 @@ function drawReels(
       .join("");
 }
 
-function renderStorySummary(
-  user
-) {
-  const chapter =
-    user.storyChapter ||
-    1;
+function animateTap() {
+  const cells =
+    qa("#r i");
 
-  const title =
-    user.storyTitle ||
-    "Pierwszy Automat";
-
-  const icon =
-    user.storyIcon ||
-    "🎰";
-
-  const chapterBox =
-    q(
-      "#story-chapter"
-    );
-
-  const titleBox =
-    q(
-      "#story-title"
-    );
-
-  const iconBox =
-    q(
-      "#story-icon"
-    );
-
-  const nextBox =
-    q(
-      "#story-next-level"
-    );
-
-  if (chapterBox) {
-    chapterBox.textContent =
-      `Rozdział ${chapter}`;
+  if (!cells.length) {
+    return;
   }
 
-  if (titleBox) {
-    titleBox.textContent =
-      title;
-  }
+  const amount =
+    2 +
+    Math.floor(
+      Math.random() * 3
+    );
 
-  if (iconBox) {
-    iconBox.textContent =
-      icon;
-  }
+  for (
+    let i = 0;
+    i < amount;
+    i++
+  ) {
+    const cell =
+      cells[
+        Math.floor(
+          Math.random() *
+          cells.length
+        )
+      ];
 
-  if (nextBox) {
-    nextBox.textContent =
-      user.nextStoryLevel
-        ? `Następny rozdział: Level ${user.nextStoryLevel}`
-        : "Wszystkie rozdziały odblokowane";
+    cell.textContent =
+      randomSymbol();
+
+    cell.style.transform =
+      "scale(1.12)";
+
+    setTimeout(
+      () => {
+        cell.style.transform =
+          "scale(1)";
+      },
+      120
+    );
   }
 }
+
+/* =========================
+   USER
+   ========================= */
 
 function renderUser(user) {
   if (!user) {
@@ -242,14 +210,23 @@ function renderUser(user) {
 
   const rp =
     Number(
-      user.rewardPoints ||
-      0
+      user.rewardPoints || 0
     );
 
   const freeSpins =
     Number(
-      user.freeSpins ||
-      0
+      user.freeSpins || 0
+    );
+
+  const spinProgress =
+    Number(
+      user.spinProgress || 0
+    );
+
+  const spinTarget =
+    Number(
+      user.spinTarget ||
+      SPIN_TARGET
     );
 
   if (q("#c")) {
@@ -268,44 +245,18 @@ function renderUser(user) {
       )}`;
   }
 
-  if (
-    q(
-      "#energy-progress"
-    )
-  ) {
-    q(
-      "#energy-progress"
-    ).max =
+  const energyProgress =
+    q("#energy-progress");
+
+  if (energyProgress) {
+    energyProgress.max =
       maxEnergy;
 
-    q(
-      "#energy-progress"
-    ).value =
+    energyProgress.value =
       Math.min(
         energy,
         maxEnergy
       );
-  }
-
-  if (
-    q(
-      "#energy-percent"
-    )
-  ) {
-    const percent =
-      maxEnergy > 0
-        ? Math.round(
-            (
-              energy /
-              maxEnergy
-            ) * 100
-          )
-        : 0;
-
-    q(
-      "#energy-percent"
-    ).textContent =
-      `${percent}%`;
   }
 
   if (q("#n")) {
@@ -316,10 +267,12 @@ function renderUser(user) {
   }
 
   if (q("#level")) {
-    q(
-      "#level"
-    ).textContent =
-      user.level || 1;
+    q("#level").textContent =
+      Number(
+        user.level || 1
+      ).toLocaleString(
+        "pl-PL"
+      );
   }
 
   if (q("#xp")) {
@@ -336,96 +289,95 @@ function renderUser(user) {
       );
   }
 
-  if (
-    q(
-      "#free-spins"
-    )
-  ) {
-    q(
-      "#free-spins"
-    ).textContent =
-      freeSpins;
+  if (q("#free-spins")) {
+    q("#free-spins")
+      .textContent =
+      freeSpins.toLocaleString(
+        "pl-PL"
+      );
   }
 
-  if (
-    q(
-      "#reward-balance"
-    )
-  ) {
-    q(
-      "#reward-balance"
-    ).textContent =
+  if (q("#reward-balance")) {
+    q("#reward-balance")
+      .textContent =
       `${rp.toLocaleString(
         "pl-PL"
       )} RP`;
   }
 
-  const spinProgress =
-    Number(
-      user.spinProgress ||
-      0
-    );
-
-  const spinTarget =
-    Number(
-      user.spinTarget ||
-      SPIN_TARGET
-    );
-
-  const spinPercent =
-    Math.min(
-      100,
-      Math.round(
-        (
-          spinProgress /
-          spinTarget
-        ) * 100
-      )
-    );
+  const progress =
+    spinTarget > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (
+              spinProgress /
+              spinTarget
+            ) *
+            100
+          )
+        )
+      : 0;
 
   if (q("#p")) {
     q("#p").value =
-      spinPercent;
+      progress;
   }
 
-  if (
-    q(
-      "#spin-progress"
-    )
-  ) {
-    q(
-      "#spin-progress"
-    ).textContent =
+  if (q("#spin-progress")) {
+    q("#spin-progress")
+      .textContent =
       `${spinProgress}/${spinTarget}`;
   }
 
-  const boostText = [];
+  const boosts = [];
 
-  if (
-    user.x2Active
-  ) {
-    boostText.push(
-      "x2"
-    );
+  if (user.x2Active) {
+    boosts.push("x2");
   }
 
-  if (
-    user.vipActive
-  ) {
-    boostText.push(
-      "VIP"
-    );
+  if (user.vipActive) {
+    boosts.push("VIP");
   }
 
   if (q("#boost")) {
-    q(
-      "#boost"
-    ).textContent =
-      boostText.length
-        ? boostText.join(
-            " + "
-          )
+    q("#boost").textContent =
+      boosts.length
+        ? boosts.join(" + ")
         : "—";
+  }
+
+  const currentChapter =
+    Math.max(
+      1,
+      Math.min(
+        STORY_CHAPTERS_COUNT,
+        Number(
+          user.storyChapter || 1
+        )
+      )
+    );
+
+  if (q("#city-progress")) {
+    q("#city-progress")
+      .textContent =
+      `${currentChapter}/${STORY_CHAPTERS_COUNT}`;
+  }
+
+  if (q("#story-icon")) {
+    q("#story-icon")
+      .textContent =
+      user.storyIcon ||
+      "🎰";
+  }
+
+  if (q("#story-title")) {
+    q("#story-title")
+      .textContent =
+      `Rozdział ${currentChapter} — ${
+        user.storyTitle ||
+        "Pierwszy Automat"
+      }`;
   }
 
   const canSpin =
@@ -441,74 +393,18 @@ function renderUser(user) {
     if (
       freeSpins > 0
     ) {
-      q(
-        "#s"
-      ).textContent =
+      q("#s").textContent =
         `🎁 LUCKY SPIN — BONUS x${freeSpins}`;
     } else if (
       spinProgress >=
       spinTarget
     ) {
-      q(
-        "#s"
-      ).textContent =
+      q("#s").textContent =
         "🎰 LUCKY SPIN — GOTOWY!";
     } else {
-      q(
-        "#s"
-      ).textContent =
+      q("#s").textContent =
         `🎰 LUCKY SPIN ${spinProgress}/${spinTarget}`;
     }
-  }
-
-  renderStorySummary(
-    user
-  );
-}
-
-function animateTap() {
-  const cells =
-    qa("#r i");
-
-  if (
-    !cells.length
-  ) {
-    return;
-  }
-
-  const amount =
-    2 +
-    Math.floor(
-      Math.random() *
-      3
-    );
-
-  for (
-    let i = 0;
-    i < amount;
-    i++
-  ) {
-    const cell =
-      cells[
-        Math.floor(
-          Math.random() *
-          cells.length
-        )
-      ];
-
-    cell.textContent =
-      randomSymbol();
-
-    cell.style.transform =
-      "scale(1.12)";
-
-    setTimeout(
-      () => {
-        cell.style.transform =
-          "scale(1)";
-      },
-      120
-    );
   }
 }
 
@@ -519,45 +415,40 @@ async function loadUser() {
         "/api/me"
       );
 
-    renderUser(
-      user
-    );
+    renderUser(user);
 
     if (q("#m")) {
-      q(
-        "#m"
-      ).textContent =
+      q("#m").textContent =
         user.freeSpins > 0
           ? `🎁 Masz ${user.freeSpins} bonusowych spinów`
           : "Tapnij i naładuj Lucky Spin!";
     }
   } catch (error) {
     console.error(
+      "Load user:",
       error
     );
 
     if (q("#m")) {
-      q(
-        "#m"
-      ).textContent =
+      q("#m").textContent =
         "❌ Nie udało się zalogować";
     }
 
     if (q("#t")) {
-      q(
-        "#t"
-      ).disabled =
+      q("#t").disabled =
         true;
     }
 
     if (q("#s")) {
-      q(
-        "#s"
-      ).disabled =
+      q("#s").disabled =
         true;
     }
   }
 }
+
+/* =========================
+   STORY
+   ========================= */
 
 async function loadStory() {
   try {
@@ -569,6 +460,34 @@ async function loadStory() {
     const current =
       storyData.current;
 
+    if (!current) {
+      return;
+    }
+
+    if (q("#story-icon")) {
+      q("#story-icon")
+        .textContent =
+        current.icon;
+    }
+
+    if (q("#story-title")) {
+      q("#story-title")
+        .textContent =
+        `Rozdział ${current.chapter} — ${current.title}`;
+    }
+
+    if (
+      q(
+        "#story-description"
+      )
+    ) {
+      q(
+        "#story-description"
+      ).textContent =
+        current.subtitle ||
+        current.description;
+    }
+
     if (
       q(
         "#story-detail-title"
@@ -578,17 +497,6 @@ async function loadStory() {
         "#story-detail-title"
       ).textContent =
         `${current.icon} ${current.title}`;
-    }
-
-    if (
-      q(
-        "#story-detail-subtitle"
-      )
-    ) {
-      q(
-        "#story-detail-subtitle"
-      ).textContent =
-        current.subtitle;
     }
 
     if (
@@ -613,58 +521,97 @@ async function loadStory() {
         current.objective;
     }
 
-    const list =
+    if (
+      q(
+        "#city-progress"
+      )
+    ) {
+      q(
+        "#city-progress"
+      ).textContent =
+        `${current.chapter}/${STORY_CHAPTERS_COUNT}`;
+    }
+
+    const box =
       q(
         "#story-chapters"
       );
 
-    if (list) {
-      list.innerHTML =
-        storyData.chapters
-          .map(
-            (
-              chapter
-            ) => `
-              <div class="list-card story-card ${
+    if (!box) {
+      return;
+    }
+
+    box.innerHTML =
+      storyData.chapters
+        .map(
+          (chapter) => `
+            <article
+              class="story-card ${
                 chapter.unlocked
                   ? "unlocked"
                   : "locked"
-              }">
-                <div>
-                  <strong>
-                    ${chapter.icon}
-                    Rozdział ${chapter.chapter}
-                    — ${escapeHtml(
-                      chapter.title
-                    )}
-                  </strong>
+              }"
+            >
+              <strong>
+                ${escapeHtml(
+                  chapter.icon
+                )}
+                Rozdział
+                ${Number(
+                  chapter.chapter
+                )}
+                —
+                ${escapeHtml(
+                  chapter.title
+                )}
+              </strong>
 
-                  <p>
-                    ${escapeHtml(
-                      chapter.subtitle
-                    )}
-                  </p>
+              <p>
+                ${escapeHtml(
+                  chapter.subtitle
+                )}
+              </p>
 
-                  <small>
-                    ${
-                      chapter.unlocked
-                        ? "✅ Odblokowany"
-                        : `🔒 Wymagany Level ${chapter.minLevel}`
-                    }
-                  </small>
-                </div>
-              </div>
-            `
-          )
-          .join("");
-    }
+              <small>
+                ${
+                  chapter.unlocked
+                    ? "✅ Odblokowany"
+                    : `🔒 Level ${Number(
+                        chapter.minLevel
+                      )}`
+                }
+              </small>
+            </article>
+          `
+        )
+        .join("");
   } catch (error) {
     console.error(
       "Story:",
       error
     );
+
+    const box =
+      q(
+        "#story-chapters"
+      );
+
+    if (box) {
+      box.innerHTML =
+        `
+        <div class="list-card">
+          <small>
+            Nie udało się pobrać Lucky City.
+          </small>
+        </div>
+        `;
+    }
   }
 }
+
+/* =========================
+   TAP
+   ========================= */
 
 async function tap() {
   if (spinning) {
@@ -676,9 +623,7 @@ async function tap() {
   if (
     navigator.vibrate
   ) {
-    navigator.vibrate(
-      18
-    );
+    navigator.vibrate(18);
   }
 
   try {
@@ -686,65 +631,67 @@ async function tap() {
       await api(
         "/api/tap",
         {
-          method:
-            "POST"
+          method: "POST"
         }
       );
 
-    renderUser(
-      user
-    );
+    renderUser(user);
 
-    if (!q("#m")) {
+    const message =
+      q("#m");
+
+    if (!message) {
       return;
     }
 
-    if (
-      user.energy <= 0
-    ) {
-      q(
-        "#m"
-      ).textContent =
-        "⚡ Brak energii — poczekaj na regenerację.";
-    } else if (
-      user.freeSpins > 0
-    ) {
-      q(
-        "#m"
-      ).textContent =
-        `🎁 Bonusowe spiny: ${user.freeSpins}`;
-    } else if (
-      user.spinProgress >=
-      (
+    const target =
+      Number(
         user.spinTarget ||
         SPIN_TARGET
-      )
+      );
+
+    if (
+      Number(
+        user.energy
+      ) <= 0
     ) {
-      q(
-        "#m"
-      ).textContent =
+      message.textContent =
+        "⚡ Brak energii — poczekaj na regenerację.";
+    } else if (
+      Number(
+        user.freeSpins
+      ) > 0
+    ) {
+      message.textContent =
+        `🎁 Bonusowe spiny: ${user.freeSpins}`;
+    } else if (
+      Number(
+        user.spinProgress
+      ) >=
+      target
+    ) {
+      message.textContent =
         "🔥 Lucky Spin gotowy!";
     } else {
-      q(
-        "#m"
-      ).textContent =
+      message.textContent =
         `Jeszcze ${
-          (
-            user.spinTarget ||
-            SPIN_TARGET
-          ) -
-          user.spinProgress
+          target -
+          Number(
+            user.spinProgress
+          )
         } tapów do spinu`;
     }
   } catch (error) {
     if (q("#m")) {
-      q(
-        "#m"
-      ).textContent =
+      q("#m").textContent =
         `❌ ${error.message}`;
     }
   }
 }
+
+/* =========================
+   SPIN
+   ========================= */
 
 async function spin() {
   if (
@@ -754,16 +701,20 @@ async function spin() {
     return;
   }
 
-  const spinTarget =
+  const target =
     Number(
       state.spinTarget ||
       SPIN_TARGET
     );
 
   const canSpin =
-    state.freeSpins > 0 ||
-    state.spinProgress >=
-      spinTarget;
+    Number(
+      state.freeSpins
+    ) > 0 ||
+    Number(
+      state.spinProgress
+    ) >=
+      target;
 
   if (!canSpin) {
     return;
@@ -772,32 +723,27 @@ async function spin() {
   spinning = true;
 
   if (q("#t")) {
-    q(
-      "#t"
-    ).disabled =
+    q("#t").disabled =
       true;
   }
 
   if (q("#s")) {
-    q(
-      "#s"
-    ).disabled =
+    q("#s").disabled =
       true;
   }
 
   if (q("#m")) {
-    q(
-      "#m"
-    ).textContent =
+    q("#m").textContent =
       "🎰 Kręcimy...";
   }
 
   const animation =
     setInterval(
-      () =>
+      () => {
         drawReels(
           randomBoard()
-        ),
+        );
+      },
       90
     );
 
@@ -806,8 +752,7 @@ async function spin() {
       await api(
         "/api/spin",
         {
-          method:
-            "POST"
+          method: "POST"
         }
       );
 
@@ -815,7 +760,7 @@ async function spin() {
       (resolve) =>
         setTimeout(
           resolve,
-          1200
+          1100
         )
     );
 
@@ -832,9 +777,7 @@ async function spin() {
     );
 
     if (q("#m")) {
-      q(
-        "#m"
-      ).textContent =
+      q("#m").textContent =
         `💰 WYGRANA +${Number(
           result.win || 0
         ).toLocaleString(
@@ -853,24 +796,23 @@ async function spin() {
         ]
       );
     }
+
+    await loadStory();
   } catch (error) {
     clearInterval(
       animation
     );
 
     if (q("#m")) {
-      q(
-        "#m"
-      ).textContent =
+      q("#m").textContent =
         `❌ ${error.message}`;
     }
   } finally {
-    spinning = false;
+    spinning =
+      false;
 
     if (q("#t")) {
-      q(
-        "#t"
-      ).disabled =
+      q("#t").disabled =
         false;
     }
 
@@ -882,14 +824,17 @@ async function spin() {
   }
 }
 
+/* =========================
+   DAILY
+   ========================= */
+
 async function claimDaily() {
   try {
     const result =
       await api(
         "/api/daily/claim",
         {
-          method:
-            "POST"
+          method: "POST"
         }
       );
 
@@ -897,8 +842,26 @@ async function claimDaily() {
       result.user
     );
 
+    await loadStory();
+
     alert(
-      `🎁 Daily Bonus\n\n+${result.reward.coins} Coins\n+${result.reward.rewardPoints} RP\n+${result.reward.energy || 0} Energii\nStreak: ${result.reward.streak}`
+      `🎁 Daily Bonus\n\n` +
+      `+${Number(
+        result.reward.coins
+      ).toLocaleString(
+        "pl-PL"
+      )} Coins\n` +
+      `+${Number(
+        result.reward.rewardPoints
+      ).toLocaleString(
+        "pl-PL"
+      )} RP\n` +
+      `+${Number(
+        result.reward.energy || 0
+      ).toLocaleString(
+        "pl-PL"
+      )} Energii\n` +
+      `🔥 Streak: ${result.reward.streak}`
     );
   } catch (error) {
     alert(
@@ -906,6 +869,10 @@ async function claimDaily() {
     );
   }
 }
+
+/* =========================
+   COIN SHOP
+   ========================= */
 
 async function buyCoinProduct(
   key
@@ -913,10 +880,11 @@ async function buyCoinProduct(
   try {
     const result =
       await api(
-        `/api/shop/coins/${key}`,
+        `/api/shop/coins/${encodeURIComponent(
+          key
+        )}`,
         {
-          method:
-            "POST"
+          method: "POST"
         }
       );
 
@@ -925,7 +893,7 @@ async function buyCoinProduct(
     );
 
     alert(
-      "✅ Zakupiony!"
+      "✅ Zakup zakończony!"
     );
   } catch (error) {
     alert(
@@ -934,22 +902,31 @@ async function buyCoinProduct(
   }
 }
 
+/* =========================
+   STARS
+   ========================= */
+
 async function buyStarProduct(
   key
 ) {
   try {
     const result =
       await api(
-        `/api/shop/stars/${key}`,
+        `/api/shop/stars/${encodeURIComponent(
+          key
+        )}`,
         {
-          method:
-            "POST"
+          method: "POST"
         }
       );
 
-    if (!tg) {
+    if (
+      !tg ||
+      typeof tg.openInvoice !==
+        "function"
+    ) {
       alert(
-        "Zakupy Stars działają w Telegramie."
+        "Zakupy Telegram Stars działają wewnątrz Telegrama."
       );
 
       return;
@@ -957,23 +934,20 @@ async function buyStarProduct(
 
     tg.openInvoice(
       result.invoiceLink,
-      async (
-        status
-      ) => {
+      (status) => {
         if (
           status ===
           "paid"
         ) {
           if (q("#m")) {
-            q(
-              "#m"
-            ).textContent =
+            q("#m").textContent =
               "⭐ Płatność przyjęta...";
           }
 
           setTimeout(
             async () => {
               await loadUser();
+              await loadStory();
 
               alert(
                 "🎁 Zakup dodany do konta!"
@@ -1008,21 +982,53 @@ async function buyStarProduct(
     );
   }
 }
+
+/* =========================
+   MISSIONS
+   ========================= */
+
+function difficultyName(
+  difficulty
+) {
+  const names = {
+    easy:
+      "ŁATWA",
+
+    normal:
+      "NORMALNA",
+
+    hard:
+      "TRUDNA",
+
+    epic:
+      "EPICKA",
+
+    legendary:
+      "LEGENDARNA"
+  };
+
+  return (
+    names[difficulty] ||
+    String(
+      difficulty ||
+      ""
+    ).toUpperCase()
+  );
+}
+
 async function loadMissions() {
+  const box =
+    q("#missions-list");
+
+  if (!box) {
+    return;
+  }
+
   try {
     const missions =
       await api(
         "/api/missions"
       );
-
-    const box =
-      q(
-        "#missions-list"
-      );
-
-    if (!box) {
-      return;
-    }
 
     box.innerHTML =
       missions
@@ -1030,67 +1036,30 @@ async function loadMissions() {
           (mission) => {
             const progress =
               Number(
-                mission.progress ||
-                0
+                mission.progress || 0
               );
 
             const target =
               Number(
-                mission.target ||
-                0
+                mission.target || 1
               );
 
             const percent =
-              target > 0
-                ? Math.min(
-                    100,
-                    Math.round(
-                      (
-                        progress /
-                        target
-                      ) * 100
-                    )
-                  )
-                : 0;
-
-            let difficultyText =
-              "Łatwa";
-
-            if (
-              mission.difficulty ===
-              "normal"
-            ) {
-              difficultyText =
-                "Średnia";
-            }
-
-            if (
-              mission.difficulty ===
-              "hard"
-            ) {
-              difficultyText =
-                "Trudna";
-            }
-
-            if (
-              mission.difficulty ===
-              "epic"
-            ) {
-              difficultyText =
-                "Epicka";
-            }
-
-            if (
-              mission.difficulty ===
-              "legendary"
-            ) {
-              difficultyText =
-                "Legendarna";
-            }
+              Math.min(
+                100,
+                Math.round(
+                  (
+                    progress /
+                    target
+                  ) *
+                  100
+                )
+              );
 
             return `
-              <div class="list-card mission-card">
-
+              <article
+                class="list-card mission-card"
+              >
                 <div class="mission-content">
 
                   <div class="mission-header">
@@ -1100,8 +1069,14 @@ async function loadMissions() {
                       )}
                     </strong>
 
-                    <span class="mission-difficulty">
-                      ${difficultyText}
+                    <span
+                      class="mission-difficulty"
+                    >
+                      ${escapeHtml(
+                        difficultyName(
+                          mission.difficulty
+                        )
+                      )}
                     </span>
                   </div>
 
@@ -1112,7 +1087,9 @@ async function loadMissions() {
                     )}
                   </p>
 
-                  <div class="mission-progress-row">
+                  <div
+                    class="mission-progress-row"
+                  >
                     <span>
                       Postęp
                     </span>
@@ -1120,9 +1097,7 @@ async function loadMissions() {
                     <strong>
                       ${progress.toLocaleString(
                         "pl-PL"
-                      )}
-                      /
-                      ${target.toLocaleString(
+                      )}/${target.toLocaleString(
                         "pl-PL"
                       )}
                     </strong>
@@ -1136,22 +1111,17 @@ async function loadMissions() {
 
                   <small>
                     🪙 +${Number(
-                      mission.reward
-                        ?.coins || 0
+                      mission.reward.coins
                     ).toLocaleString(
                       "pl-PL"
                     )} Coins
-                    ·
-                    🎁 +${Number(
-                      mission.reward
-                        ?.rewardPoints || 0
+                    · 🎁 +${Number(
+                      mission.reward.rewardPoints
                     ).toLocaleString(
                       "pl-PL"
                     )} RP
-                    ·
-                    ⭐ +${Number(
-                      mission.reward
-                        ?.xp || 0
+                    · ⭐ +${Number(
+                      mission.reward.xp
                     ).toLocaleString(
                       "pl-PL"
                     )} XP
@@ -1160,6 +1130,7 @@ async function loadMissions() {
                 </div>
 
                 <button
+                  type="button"
                   class="mission-claim"
                   data-mission="${escapeHtml(
                     mission.key
@@ -1180,7 +1151,7 @@ async function loadMissions() {
                   }
                 </button>
 
-              </div>
+              </article>
             `;
           }
         )
@@ -1192,23 +1163,12 @@ async function loadMissions() {
       (button) => {
         button.onclick =
           async () => {
-            const missionKey =
-              button.dataset
-                .mission;
-
-            if (
-              !missionKey
-            ) {
-              return;
-            }
-
-            button.disabled =
-              true;
-
             try {
               const result =
                 await api(
-                  `/api/missions/${missionKey}/claim`,
+                  `/api/missions/${encodeURIComponent(
+                    button.dataset.mission
+                  )}/claim`,
                   {
                     method:
                       "POST"
@@ -1219,68 +1179,68 @@ async function loadMissions() {
                 result.user
               );
 
-              alert(
-                `🎯 Misja ukończona!\n\n${result.mission?.title || "Nagroda odebrana"}\n\n+${result.reward?.coins || 0} Coins\n+${result.reward?.rewardPoints || 0} RP\n+${result.reward?.xp || 0} XP`
-              );
-
               await loadMissions();
+              await loadStory();
+
+              alert(
+                `🎯 Misja ukończona!\n\n` +
+                `+${Number(
+                  result.reward.coins
+                ).toLocaleString(
+                  "pl-PL"
+                )} Coins\n` +
+                `+${Number(
+                  result.reward.rewardPoints
+                ).toLocaleString(
+                  "pl-PL"
+                )} RP\n` +
+                `+${Number(
+                  result.reward.xp
+                ).toLocaleString(
+                  "pl-PL"
+                )} XP`
+              );
             } catch (error) {
               alert(
                 error.message
               );
-
-              button.disabled =
-                false;
             }
           };
       }
     );
   } catch (error) {
-    console.error(
-      "Missions:",
-      error
-    );
-
-    const box =
-      q(
-        "#missions-list"
-      );
-
-    if (box) {
-      box.innerHTML =
-        `
-        <div class="list-card">
-          <small>
-            ❌ Nie udało się pobrać misji.
-          </small>
-        </div>
-        `;
-    }
+    box.innerHTML =
+      `
+      <div class="list-card">
+        <small>
+          ${escapeHtml(
+            error.message
+          )}
+        </small>
+      </div>
+      `;
   }
 }
 
+/* =========================
+   LEADERBOARD
+   ========================= */
+
 async function loadLeaderboard() {
+  const box =
+    q("#leaderboard");
+
+  if (!box) {
+    return;
+  }
+
   try {
     const list =
       await api(
         "/api/leaderboard"
       );
 
-    const box =
-      q(
-        "#leaderboard"
-      );
-
-    if (!box) {
-      return;
-    }
-
-    if (
-      !Array.isArray(
-        list
-      ) ||
-      !list.length
-    ) {
+    if (!list.length) {
       box.innerHTML =
         `
         <div class="list-card">
@@ -1297,88 +1257,76 @@ async function loadLeaderboard() {
       list
         .map(
           (player) => {
-            const rank =
-              Number(
-                player.rank ||
-                0
-              );
-
             let medal =
-              `#${rank}`;
+              `#${player.rank}`;
 
             if (
-              rank === 1
+              player.rank === 1
             ) {
-              medal =
-                "🥇";
+              medal = "🥇";
             }
 
             if (
-              rank === 2
+              player.rank === 2
             ) {
-              medal =
-                "🥈";
+              medal = "🥈";
             }
 
             if (
-              rank === 3
+              player.rank === 3
             ) {
-              medal =
-                "🥉";
+              medal = "🥉";
             }
 
             return `
-              <div class="list-card leaderboard-row">
-
-                <strong class="leaderboard-rank">
+              <div
+                class="list-card leaderboard-row"
+              >
+                <strong
+                  class="leaderboard-rank"
+                >
                   ${medal}
                 </strong>
 
-                <span class="leaderboard-name">
+                <span
+                  class="leaderboard-name"
+                >
                   ${escapeHtml(
-                    player.name ||
-                    "Gracz"
+                    player.name
                   )}
                 </span>
 
-                <b class="leaderboard-score">
+                <b
+                  class="leaderboard-score"
+                >
                   ${Number(
-                    player.weeklyCoins ||
-                    0
+                    player.weeklyCoins
                   ).toLocaleString(
                     "pl-PL"
                   )}
-                  🪙
                 </b>
-
               </div>
             `;
           }
         )
         .join("");
   } catch (error) {
-    console.error(
-      "Leaderboard:",
-      error
-    );
-
-    const box =
-      q(
-        "#leaderboard"
-      );
-
-    if (box) {
-      box.innerHTML =
-        `
-        <div class="list-card">
-          <small>
-            ❌ Nie udało się pobrać rankingu.
-          </small>
-        </div>
-        `;
-    }
+    box.innerHTML =
+      `
+      <div class="list-card">
+        <small>
+          ${escapeHtml(
+            error.message
+          )}
+        </small>
+      </div>
+      `;
   }
 }
+
+/* =========================
+   REFERRALS
+   ========================= */
 
 async function loadReferrals() {
   try {
@@ -1387,63 +1335,37 @@ async function loadReferrals() {
         "/api/referrals"
       );
 
-    const referralCode =
-      referralData
-        .referralCode ||
-      "—";
-
-    const referrals =
+    const count =
       Number(
-        referralData
-          .referrals || 0
+        referralData.referrals ||
+        0
       );
 
-    const myCoins =
+    const coinsPerRef =
       Number(
-        referralData
-          .rewards
+        referralData.rewards
           ?.referrerCoins ||
         0
       );
 
-    const myRp =
+    const rpPerRef =
       Number(
-        referralData
-          .rewards
+        referralData.rewards
           ?.referrerRP ||
         0
       );
 
-    const friendCoins =
-      Number(
-        referralData
-          .rewards
-          ?.invitedCoins ||
-        0
-      );
-
-    if (
-      q(
-        "#ref-code"
-      )
-    ) {
-      q(
-        "#ref-code"
-      ).textContent =
-        referralCode;
+    if (q("#ref-code")) {
+      q("#ref-code")
+        .textContent =
+        referralData.referralCode ||
+        "—";
     }
 
-    if (
-      q(
-        "#ref-count"
-      )
-    ) {
-      q(
-        "#ref-count"
-      ).textContent =
-        `Poleceni: ${referrals.toLocaleString(
-          "pl-PL"
-        )}`;
+    if (q("#ref-count")) {
+      q("#ref-count")
+        .textContent =
+        `Poleceni: ${count}`;
     }
 
     if (
@@ -1454,9 +1376,9 @@ async function loadReferrals() {
       q(
         "#ref-my-reward"
       ).textContent =
-        `🪙 ${myCoins.toLocaleString(
+        `🪙 ${coinsPerRef.toLocaleString(
           "pl-PL"
-        )} Coins + 🎁 ${myRp.toLocaleString(
+        )} Coins + 🎁 ${rpPerRef.toLocaleString(
           "pl-PL"
         )} RP`;
     }
@@ -1469,18 +1391,14 @@ async function loadReferrals() {
       q(
         "#ref-friend-reward"
       ).textContent =
-        `🪙 ${friendCoins.toLocaleString(
+        `🪙 ${Number(
+          referralData.rewards
+            ?.invitedCoins ||
+          0
+        ).toLocaleString(
           "pl-PL"
         )} Coins`;
     }
-
-    const totalCoins =
-      referrals *
-      myCoins;
-
-    const totalRp =
-      referrals *
-      myRp;
 
     if (
       q(
@@ -1490,9 +1408,15 @@ async function loadReferrals() {
       q(
         "#ref-total-earned"
       ).textContent =
-        `${totalCoins.toLocaleString(
+        `${(
+          count *
+          coinsPerRef
+        ).toLocaleString(
           "pl-PL"
-        )} Coins + ${totalRp.toLocaleString(
+        )} Coins + ${(
+          count *
+          rpPerRef
+        ).toLocaleString(
           "pl-PL"
         )} RP`;
     }
@@ -1502,28 +1426,16 @@ async function loadReferrals() {
       error
     );
 
-    referralData =
-      null;
-
-    if (
-      q(
-        "#ref-code"
-      )
-    ) {
-      q(
-        "#ref-code"
-      ).textContent =
+    if (q("#ref-code")) {
+      q("#ref-code")
+        .textContent =
         "Błąd";
     }
   }
 }
 
-function getReferralLink() {
-  if (
-    !referralData ||
-    !referralData
-      .startParam
-  ) {
+function referralLink() {
+  if (!referralData) {
     return null;
   }
 
@@ -1531,44 +1443,11 @@ function getReferralLink() {
     "ACABBACA_bot";
 
   return (
-    `https://t.me/${botUsername}` +
-    `?startapp=${encodeURIComponent(
+    `https://t.me/${botUsername}?startapp=` +
+    encodeURIComponent(
       referralData.startParam
-    )}`
+    )
   );
-}
-
-async function copyReferralLink() {
-  if (!referralData) {
-    await loadReferrals();
-  }
-
-  const link =
-    getReferralLink();
-
-  if (!link) {
-    alert(
-      "Nie udało się pobrać linku polecającego."
-    );
-
-    return;
-  }
-
-  try {
-    await navigator
-      .clipboard
-      .writeText(
-        link
-      );
-
-    alert(
-      `✅ Link skopiowany!\n\n${link}`
-    );
-  } catch (error) {
-    alert(
-      `Twój link polecający:\n\n${link}`
-    );
-  }
 }
 
 async function shareReferral() {
@@ -1577,7 +1456,7 @@ async function shareReferral() {
   }
 
   const link =
-    getReferralLink();
+    referralLink();
 
   if (!link) {
     alert(
@@ -1588,33 +1467,21 @@ async function shareReferral() {
   }
 
   const text =
-    `🎰 Lucky Tap Slots\n\n` +
-    `Zagraj ze mną w Lucky City i odbierz bonus startowy!\n\n` +
-    `${link}`;
+    `🎰 Zagraj w Lucky Tap Slots!\n` +
+    `Rozwijaj Lucky City, wykonuj misje i zdobywaj nagrody.\n\n` +
+    link;
 
   try {
     if (
       navigator.share
     ) {
-      await navigator.share({
-        title:
-          "Lucky Tap Slots",
+      await navigator.share(
+        {
+          title:
+            "Lucky Tap Slots",
 
-        text
-      });
-
-      return;
-    }
-
-    if (
-      tg?.openTelegramLink
-    ) {
-      tg.openTelegramLink(
-        `https://t.me/share/url?url=${encodeURIComponent(
-          link
-        )}&text=${encodeURIComponent(
-          "🎰 Zagraj ze mną w Lucky Tap Slots i odbierz bonus!"
-        )}`
+          text
+        }
       );
 
       return;
@@ -1622,53 +1489,225 @@ async function shareReferral() {
 
     await navigator
       .clipboard
-      .writeText(
-        link
-      );
+      .writeText(link);
 
     alert(
-      `✅ Link skopiowany!\n\n${link}`
+      "✅ Link polecający został skopiowany."
     );
-  } catch (error) {
-    /*
-     * Gdy użytkownik zamknie systemowe
-     * okno udostępniania, nie traktujemy
-     * tego jako poważnego błędu.
-     */
-    if (
-      error?.name ===
-      "AbortError"
-    ) {
-      return;
-    }
-
+  } catch {
     alert(
       `Twój link polecający:\n\n${link}`
     );
   }
 }
+
+async function copyReferral() {
+  if (!referralData) {
+    await loadReferrals();
+  }
+
+  const link =
+    referralLink();
+
+  if (!link) {
+    alert(
+      "Nie udało się pobrać linku."
+    );
+
+    return;
+  }
+
+  try {
+    await navigator
+      .clipboard
+      .writeText(link);
+
+    const button =
+      q("#copy-ref");
+
+    if (button) {
+      const original =
+        button.textContent;
+
+      button.textContent =
+        "✅ SKOPIOWANO";
+
+      setTimeout(
+        () => {
+          button.textContent =
+            original;
+        },
+        1500
+      );
+    }
+  } catch {
+    alert(
+      `Twój link:\n\n${link}`
+    );
+  }
+}
+
+/* =========================
+   REWARD CENTER
+   ========================= */
+
+async function loadRewards() {
+  const box =
+    q("#rewards-list");
+
+  if (!box) {
+    return;
+  }
+
+  try {
+    const data =
+      await api(
+        "/api/rewards"
+      );
+
+    if (
+      q(
+        "#reward-balance"
+      )
+    ) {
+      q(
+        "#reward-balance"
+      ).textContent =
+        `${Number(
+          data.balance || 0
+        ).toLocaleString(
+          "pl-PL"
+        )} RP`;
+    }
+
+    box.innerHTML =
+      data.rewards
+        .map(
+          (reward) => `
+            <article
+              class="list-card reward-card"
+            >
+              <div>
+                <strong>
+                  🎁 ${escapeHtml(
+                    reward.label
+                  )}
+                </strong>
+
+                <p>
+                  ${Number(
+                    reward.cost
+                  ).toLocaleString(
+                    "pl-PL"
+                  )} RP
+                </p>
+
+                <small>
+                  Wymagany Level
+                  ${Number(
+                    reward.minLevel
+                  )}
+                </small>
+              </div>
+
+              <button
+                type="button"
+                class="reward-redeem"
+                data-reward="${escapeHtml(
+                  reward.key
+                )}"
+                ${
+                  reward.available
+                    ? ""
+                    : "disabled"
+                }
+              >
+                ${
+                  reward.available
+                    ? "ODBIERZ"
+                    : "ZABLOKOWANE"
+                }
+              </button>
+            </article>
+          `
+        )
+        .join("");
+
+    qa(
+      ".reward-redeem"
+    ).forEach(
+      (button) => {
+        button.onclick =
+          async () => {
+            const confirmed =
+              confirm(
+                "Wysłać zgłoszenie nagrody?"
+              );
+
+            if (!confirmed) {
+              return;
+            }
+
+            try {
+              const result =
+                await api(
+                  `/api/rewards/${encodeURIComponent(
+                    button.dataset.reward
+                  )}/redeem`,
+                  {
+                    method:
+                      "POST"
+                  }
+                );
+
+              alert(
+                `✅ ${result.message}\n\nID zgłoszenia: ${result.redemptionId}`
+              );
+
+              await loadUser();
+              await loadRewards();
+              await loadRewardHistory();
+            } catch (error) {
+              alert(
+                error.message
+              );
+            }
+          };
+      }
+    );
+  } catch (error) {
+    box.innerHTML =
+      `
+      <div class="list-card">
+        <small>
+          ${escapeHtml(
+            error.message
+          )}
+        </small>
+      </div>
+      `;
+  }
+}
+
+/* =========================
+   REWARD HISTORY
+   ========================= */
+
 async function loadRewardHistory() {
+  const box =
+    q("#reward-history");
+
+  if (!box) {
+    return;
+  }
+
   try {
     const history =
       await api(
         "/api/rewards/history"
       );
 
-    const box =
-      q(
-        "#reward-history"
-      );
-
-    if (!box) {
-      return;
-    }
-
-    if (
-      !Array.isArray(
-        history
-      ) ||
-      !history.length
-    ) {
+    if (!history.length) {
       box.innerHTML =
         `
         <div class="list-card">
@@ -1713,18 +1752,17 @@ async function loadRewardHistory() {
                 "rejected";
             }
 
-            let extra =
-              "";
+            let extra = "";
 
             if (
               item.adminNote
             ) {
               extra += `
-                <p class="reward-note">
+                <div class="reward-note">
                   💬 ${escapeHtml(
                     item.adminNote
                   )}
-                </p>
+                </div>
               `;
             }
 
@@ -1747,6 +1785,7 @@ async function loadRewardHistory() {
                   </strong>
 
                   <button
+                    type="button"
                     class="copy-reward-code"
                     data-code="${escapeHtml(
                       item.fulfillmentCode
@@ -1760,25 +1799,26 @@ async function loadRewardHistory() {
             }
 
             return `
-              <div class="list-card reward-history-card">
-
+              <article
+                class="list-card reward-history-card"
+              >
                 <div>
 
                   <strong>
                     ${escapeHtml(
-                      item.label ||
-                      "Nagroda"
+                      item.label
                     )}
                   </strong>
 
-                  <p class="reward-status ${statusClass}">
+                  <div
+                    class="reward-status ${statusClass}"
+                  >
                     ${statusText}
-                  </p>
+                  </div>
 
                   <small>
                     ${Number(
-                      item.cost ||
-                      0
+                      item.cost
                     ).toLocaleString(
                       "pl-PL"
                     )} RP
@@ -1787,8 +1827,7 @@ async function loadRewardHistory() {
                   ${extra}
 
                 </div>
-
-              </div>
+              </article>
             `;
           }
         )
@@ -1801,12 +1840,7 @@ async function loadRewardHistory() {
         button.onclick =
           async () => {
             const code =
-              button.dataset
-                .code;
-
-            if (!code) {
-              return;
-            }
+              button.dataset.code;
 
             try {
               await navigator
@@ -1815,7 +1849,7 @@ async function loadRewardHistory() {
                   code
                 );
 
-              const oldText =
+              const original =
                 button.textContent;
 
               button.textContent =
@@ -1824,7 +1858,7 @@ async function loadRewardHistory() {
               setTimeout(
                 () => {
                   button.textContent =
-                    oldText;
+                    original;
                 },
                 1500
               );
@@ -1842,422 +1876,178 @@ async function loadRewardHistory() {
       error
     );
 
-    const box =
-      q(
-        "#reward-history"
-      );
-
-    if (box) {
-      box.innerHTML =
-        `
-        <div class="list-card">
-          <small>
-            ❌ Nie udało się pobrać historii nagród.
-          </small>
-        </div>
-        `;
-    }
-  }
-}
-
-async function loadRewards() {
-  try {
-    const data =
-      await api(
-        "/api/rewards"
-      );
-
-    const balance =
-      Number(
-        data.balance ||
-        0
-      );
-
-    if (
-      q(
-        "#reward-balance"
-      )
-    ) {
-      q(
-        "#reward-balance"
-      ).textContent =
-        `${balance.toLocaleString(
-          "pl-PL"
-        )} RP`;
-    }
-
-    const box =
-      q(
-        "#rewards-list"
-      );
-
-    if (!box) {
-      return;
-    }
-
     box.innerHTML =
-      data.rewards
-        .map(
-          (reward) => {
-            const available =
-              !!reward.available;
-
-            return `
-              <div class="list-card reward-card">
-
-                <div>
-
-                  <strong>
-                    🎁 ${escapeHtml(
-                      reward.label
-                    )}
-                  </strong>
-
-                  <p>
-                    ${Number(
-                      reward.cost ||
-                      0
-                    ).toLocaleString(
-                      "pl-PL"
-                    )} RP
-                  </p>
-
-                  <small>
-                    Wymagany Level
-                    ${Number(
-                      reward.minLevel ||
-                      1
-                    )}
-                  </small>
-
-                </div>
-
-                <button
-                  class="reward-redeem"
-                  data-reward="${escapeHtml(
-                    reward.key
-                  )}"
-                  ${
-                    available
-                      ? ""
-                      : "disabled"
-                  }
-                >
-                  ${
-                    available
-                      ? "🎁 ODBIERZ"
-                      : "🔒 ZABLOKOWANE"
-                  }
-                </button>
-
-              </div>
-            `;
-          }
-        )
-        .join("");
-
-    qa(
-      ".reward-redeem"
-    ).forEach(
-      (button) => {
-        button.onclick =
-          async () => {
-            const rewardKey =
-              button.dataset
-                .reward;
-
-            if (
-              !rewardKey
-            ) {
-              return;
-            }
-
-            const confirmed =
-              confirm(
-                "Wysłać zgłoszenie nagrody?"
-              );
-
-            if (
-              !confirmed
-            ) {
-              return;
-            }
-
-            button.disabled =
-              true;
-
-            try {
-              const result =
-                await api(
-                  `/api/rewards/${rewardKey}/redeem`,
-                  {
-                    method:
-                      "POST"
-                  }
-                );
-
-              alert(
-                `✅ ${result.message}\n\nID zgłoszenia: ${result.redemptionId}`
-              );
-
-              await loadUser();
-              await loadRewards();
-              await loadRewardHistory();
-            } catch (error) {
-              alert(
-                error.message
-              );
-
-              button.disabled =
-                false;
-            }
-          };
-      }
-    );
-  } catch (error) {
-    console.error(
-      "Rewards:",
-      error
-    );
-
-    const box =
-      q(
-        "#rewards-list"
-      );
-
-    if (box) {
-      box.innerHTML =
-        `
-        <div class="list-card">
-          <small>
-            ❌ Nie udało się pobrać nagród.
-          </small>
-        </div>
-        `;
-    }
+      `
+      <div class="list-card">
+        <small>
+          Nie udało się pobrać historii.
+        </small>
+      </div>
+      `;
   }
 }
 
-function showPage(name) {
-  qa(
-    ".page"
-  ).forEach(
-    (page) => {
+/* =========================
+   PAGES
+   ========================= */
+
+async function showPage(
+  name
+) {
+  qa(".page").forEach(
+    (page) =>
       page.classList.remove(
         "active"
-      );
-    }
+      )
   );
 
-  qa(
-    ".nav-btn"
-  ).forEach(
-    (button) => {
+  qa(".nav-btn").forEach(
+    (button) =>
       button.classList.remove(
         "active"
-      );
+      )
+  );
+
+  q(
+    `#page-${name}`
+  )?.classList.add(
+    "active"
+  );
+
+  q(
+    `.nav-btn[data-page="${name}"]`
+  )?.classList.add(
+    "active"
+  );
+
+  window.scrollTo(
+    {
+      top: 0,
+      behavior: "smooth"
     }
   );
 
-  const page =
-    q(
-      `#page-${name}`
-    );
-
-  if (page) {
-    page.classList.add(
-      "active"
-    );
+  if (
+    name === "story"
+  ) {
+    await loadStory();
   }
 
-  const navButton =
-    q(
-      `.nav-btn[data-page="${name}"]`
-    );
+  if (
+    name === "missions"
+  ) {
+    await loadMissions();
+  }
 
-  if (navButton) {
-    navButton.classList.add(
-      "active"
+  if (
+    name === "ranking"
+  ) {
+    await Promise.all(
+      [
+        loadLeaderboard(),
+        loadReferrals()
+      ]
     );
   }
 
   if (
-    name ===
-    "missions"
+    name === "rewards"
   ) {
-    loadMissions();
+    await Promise.all(
+      [
+        loadRewards(),
+        loadRewardHistory()
+      ]
+    );
   }
-
-  if (
-    name ===
-    "ranking"
-  ) {
-    loadLeaderboard();
-    loadReferrals();
-  }
-
-  if (
-    name ===
-    "rewards"
-  ) {
-    loadRewards();
-    loadRewardHistory();
-  }
-
-  if (
-    name ===
-    "story"
-  ) {
-    loadStory();
-  }
-
-  window.scrollTo({
-    top: 0,
-    behavior:
-      "smooth"
-  });
 }
 
-function bindEvents() {
-  const tapButton =
-    q("#t");
+/* =========================
+   EVENTS
+   ========================= */
 
-  if (tapButton) {
-    tapButton.onclick =
-      tap;
-  }
-
-  const spinButton =
-    q("#s");
-
-  if (spinButton) {
-    spinButton.onclick =
-      spin;
-  }
-
-  const dailyButton =
-    q("#daily");
-
-  if (dailyButton) {
-    dailyButton.onclick =
-      claimDaily;
-  }
-
-  const shareButton =
-    q("#share-ref");
-
-  if (shareButton) {
-    shareButton.onclick =
-      shareReferral;
-  }
-
-  const copyRefButton =
-    q("#copy-ref");
-
-  if (copyRefButton) {
-    copyRefButton.onclick =
-      copyReferralLink;
-  }
-
-  qa(
-    ".coin-buy"
-  ).forEach(
-    (button) => {
-      button.onclick =
-        () => {
-          buyCoinProduct(
-            button.dataset
-              .product
-          );
-        };
-    }
-  );
-
-  qa(
-    ".star-buy"
-  ).forEach(
-    (button) => {
-      button.onclick =
-        () => {
-          buyStarProduct(
-            button.dataset
-              .starProduct
-          );
-        };
-    }
-  );
-
-  qa(
-    ".nav-btn"
-  ).forEach(
-    (button) => {
-      button.onclick =
-        () => {
-          showPage(
-            button.dataset
-              .page
-          );
-        };
-    }
-  );
+if (q("#t")) {
+  q("#t").onclick =
+    tap;
 }
 
-function startEnergyRefresh() {
-  setInterval(
-    async () => {
-      if (
-        !state ||
-        spinning
-      ) {
-        return;
-      }
+if (q("#s")) {
+  q("#s").onclick =
+    spin;
+}
 
-      try {
-        const user =
-          await api(
-            "/api/me"
-          );
+if (q("#daily")) {
+  q("#daily").onclick =
+    claimDaily;
+}
 
-        renderUser(
-          user
+if (q("#share-ref")) {
+  q("#share-ref").onclick =
+    shareReferral;
+}
+
+if (q("#copy-ref")) {
+  q("#copy-ref").onclick =
+    copyReferral;
+}
+
+qa(
+  ".coin-buy"
+).forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        buyCoinProduct(
+          button.dataset.product
         );
-      } catch (error) {
-        console.error(
-          "Energy refresh:",
-          error
+  }
+);
+
+qa(
+  ".star-buy"
+).forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        buyStarProduct(
+          button.dataset
+            .starProduct
         );
-      }
-    },
-    15000
-  );
-}
+  }
+);
+
+qa(
+  ".nav-btn"
+).forEach(
+  (button) => {
+    button.onclick =
+      () =>
+        showPage(
+          button.dataset.page
+        );
+  }
+);
+
+/* =========================
+   START
+   ========================= */
+
+drawReels([
+  "🍒",
+  "🍋",
+  "💎",
+  "7️⃣",
+  "⭐",
+  "🍀",
+  "🔔",
+  "🍇",
+  "🍒"
+]);
 
 async function startApp() {
-  drawReels([
-    "🍒",
-    "🍋",
-    "💎",
-    "7️⃣",
-    "⭐",
-    "🍀",
-    "🔔",
-    "🍇",
-    "🍒"
-  ]);
-
-  bindEvents();
-
   await loadUser();
 
-  /*
-   * Ładujemy od razu fabułę,
-   * żeby dane były gotowe,
-   * gdy później dodamy zakładkę
-   * Lucky City do HTML.
-   */
   await loadStory();
-
-  startEnergyRefresh();
 }
 
 startApp();
