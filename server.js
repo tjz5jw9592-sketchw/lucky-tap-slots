@@ -888,13 +888,15 @@ async function refreshEnergy(
 ) {
   await client.query(
     `
-    UPDATE users
-    SET
-      energy =
-        LEAST(
-          max_energy,
+    WITH regen AS (
+      SELECT
+        telegram_id,
+        energy,
+        max_energy,
+        energy_updated_at,
 
-          energy +
+        GREATEST(
+          0,
           FLOOR(
             EXTRACT(
               EPOCH FROM (
@@ -903,18 +905,85 @@ async function refreshEnergy(
               )
             ) / $2
           )::INTEGER
+        ) AS points
+
+      FROM users
+
+      WHERE
+        telegram_id = $1
+
+      FOR UPDATE
+    )
+
+    UPDATE users AS u
+
+    SET
+      energy =
+        LEAST(
+          u.max_energy,
+          u.energy +
+          regen.points
         ),
 
       energy_updated_at =
         CASE
-          WHEN energy <
-            max_energy
-          THEN NOW()
+
+          /*
+           * Jeżeli gracz jest już
+           * na pełnej energii,
+           * ustawiamy zegar na teraz.
+           */
+          WHEN
+            u.energy >=
+            u.max_energy
+          THEN
+            NOW()
+
+          /*
+           * Jeśli po regeneracji
+           * dobijamy do maksimum,
+           * również kończymy licznik.
+           */
+          WHEN
+            u.energy +
+            regen.points >=
+            u.max_energy
+          THEN
+            NOW()
+
+          /*
+           * Jeżeli minęło np.
+           * 37 sekund przy regeneracji
+           * co 10 sekund,
+           * dodajemy 3 energii,
+           * ale zachowujemy pozostałe
+           * 7 sekund.
+           */
+          WHEN
+            regen.points > 0
+          THEN
+            u.energy_updated_at +
+            (
+              regen.points *
+              $2
+            ) *
+            INTERVAL '1 second'
+
+          /*
+           * Jeśli nie minęło jeszcze
+           * pełne 10 sekund,
+           * NIE resetujemy zegara.
+           */
           ELSE
-            energy_updated_at
+            u.energy_updated_at
+
         END
 
-    WHERE telegram_id = $1
+    FROM regen
+
+    WHERE
+      u.telegram_id =
+      regen.telegram_id
     `,
     [
       String(
