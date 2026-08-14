@@ -1965,7 +1965,69 @@ async function showPage(
 /* =========================
    EVENTS
    ========================= */
+/* =========================
+   REWARDED AD
+   ========================= */
 
+async function watchRewardAd() {
+  const button =
+    q("#reward-ad");
+
+  if (!button) {
+    return;
+  }
+
+  if (
+    typeof window.show_11577965 !==
+    "function"
+  ) {
+    alert(
+      "Reklama nie jest jeszcze dostępna. Spróbuj ponownie za chwilę."
+    );
+
+    return;
+  }
+
+  button.disabled = true;
+
+  button.textContent =
+    "⏳ Ładowanie reklamy...";
+
+  try {
+    await window
+      .show_11577965();
+
+    button.textContent =
+      "✅ Reklama obejrzana";
+
+    /*
+     * Na razie tylko potwierdzamy
+     * obejrzenie reklamy.
+     *
+     * +5 spinów dodamy po stronie
+     * server.js, żeby gracz nie mógł
+     * oszukać aplikacji przez JS.
+     */
+
+    alert(
+      "✅ Reklama obejrzana!\n\nNagroda zostanie przyznana przez serwer."
+    );
+  } catch (error) {
+    console.error(
+      "Reward ad:",
+      error
+    );
+
+    alert(
+      "Reklama została zamknięta albo nie udało się jej wyświetlić."
+    );
+  } finally {
+    button.disabled = false;
+
+    button.textContent =
+      "🎁 OBEJRZYJ REKLAMĘ → +5 SPINÓW";
+  }
+}
 if (q("#t")) {
   q("#t").onclick =
     tap;
