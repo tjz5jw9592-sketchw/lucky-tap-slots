@@ -8,9 +8,12 @@
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
 
-  <title>
-    Lucky Tap Slots
-  </title>
+  <meta
+    name="theme-color"
+    content="#070a12"
+  >
+
+  <title>Lucky Tap Slots</title>
 
   <link
     rel="stylesheet"
@@ -23,6 +26,10 @@
 <body>
 
   <main>
+
+    <!-- =========================
+         TOP BAR
+         ========================= -->
 
     <header class="topbar">
 
@@ -47,6 +54,10 @@
       </div>
 
     </header>
+
+    <!-- =========================
+         GRA
+         ========================= -->
 
     <section
       id="page-game"
@@ -87,6 +98,8 @@
 
       </div>
 
+      <!-- FABUŁA NA EKRANIE GŁÓWNYM -->
+
       <section class="story-summary-card">
 
         <div class="story-summary-icon">
@@ -113,6 +126,8 @@
 
       </section>
 
+      <!-- AUTOMAT -->
+
       <section class="machine">
 
         <div class="jackpot">
@@ -129,6 +144,8 @@
         </p>
 
       </section>
+
+      <!-- ENERGIA -->
 
       <section class="energy-card">
 
@@ -152,6 +169,8 @@
 
       </section>
 
+      <!-- LUCKY SPIN PROGRESS -->
+
       <progress
         id="p"
         max="100"
@@ -170,9 +189,12 @@
 
       </div>
 
+      <!-- PRZYCISKI -->
+
       <button
         id="t"
         class="tap-btn"
+        type="button"
       >
         ⚡ TAP TO EARN ⚡
       </button>
@@ -180,10 +202,13 @@
       <button
         id="s"
         class="spin-btn"
+        type="button"
         disabled
       >
         🎰 LUCKY SPIN
       </button>
+
+      <!-- STATYSTYKI -->
 
       <div class="stats-grid">
 
@@ -223,7 +248,7 @@
           </span>
 
           <strong id="city-progress">
-            1/8
+            1/7
           </strong>
         </div>
 
@@ -232,11 +257,16 @@
       <button
         id="daily"
         class="secondary-btn"
+        type="button"
       >
         🎁 ODBIERZ DAILY BONUS
       </button>
 
     </section>
+
+    <!-- =========================
+         LUCKY CITY
+         ========================= -->
 
     <section
       id="page-story"
@@ -291,7 +321,12 @@
       ></div>
 
     </section>
-        <section
+
+    <!-- =========================
+         SKLEP
+         ========================= -->
+
+    <section
       id="page-shop"
       class="page"
     >
@@ -319,6 +354,7 @@
         <button
           class="shop-card coin-buy"
           data-product="spin1"
+          type="button"
         >
           <strong>
             🎰 1 Lucky Spin
@@ -332,6 +368,7 @@
         <button
           class="shop-card coin-buy"
           data-product="energy100"
+          type="button"
         >
           <strong>
             ⚡ +100 Energii
@@ -345,6 +382,7 @@
         <button
           class="shop-card coin-buy"
           data-product="x2_30m"
+          type="button"
         >
           <strong>
             🔥 x2 Tap
@@ -366,6 +404,7 @@
         <button
           class="shop-card star-buy"
           data-star-product="spins5"
+          type="button"
         >
           <strong>
             🎰 5 Lucky Spins
@@ -379,6 +418,7 @@
         <button
           class="shop-card star-buy"
           data-star-product="energy500"
+          type="button"
         >
           <strong>
             ⚡ Full Energy
@@ -392,6 +432,7 @@
         <button
           class="shop-card star-buy"
           data-star-product="x2day"
+          type="button"
         >
           <strong>
             🔥 x2 Tap 24H
@@ -405,6 +446,7 @@
         <button
           class="shop-card star-buy"
           data-star-product="vip30"
+          type="button"
         >
           <strong>
             👑 VIP 30 dni
@@ -418,6 +460,10 @@
       </div>
 
     </section>
+
+    <!-- =========================
+         MISJE
+         ========================= -->
 
     <section
       id="page-missions"
@@ -450,6 +496,10 @@
 
     </section>
 
+    <!-- =========================
+         RANKING
+         ========================= -->
+
     <section
       id="page-ranking"
       class="page"
@@ -478,6 +528,8 @@
         id="leaderboard"
         class="list"
       ></div>
+
+      <!-- REFERRAL -->
 
       <section class="referral-card">
 
@@ -533,6 +585,7 @@
         <button
           id="share-ref"
           class="secondary-btn"
+          type="button"
         >
           🔗 ZAPROŚ ZNAJOMEGO
         </button>
@@ -540,6 +593,7 @@
         <button
           id="copy-ref"
           class="secondary-btn"
+          type="button"
         >
           📋 KOPIUJ LINK
         </button>
@@ -562,7 +616,12 @@
       </section>
 
     </section>
-        <section
+
+    <!-- =========================
+         NAGRODY
+         ========================= -->
+
+    <section
       id="page-rewards"
       class="page"
     >
@@ -618,79 +677,69 @@
 
   </main>
 
+  <!-- =========================
+       DOLNA NAWIGACJA
+       ========================= -->
+
   <nav class="bottom-nav">
 
     <button
       data-page="game"
       class="nav-btn active"
+      type="button"
     >
       🎰
-
-      <span>
-        Gra
-      </span>
+      <span>Gra</span>
     </button>
 
     <button
       data-page="story"
       class="nav-btn"
+      type="button"
     >
       🏙️
-
-      <span>
-        Miasto
-      </span>
+      <span>Miasto</span>
     </button>
 
     <button
       data-page="shop"
       class="nav-btn"
+      type="button"
     >
       🛒
-
-      <span>
-        Sklep
-      </span>
+      <span>Sklep</span>
     </button>
 
     <button
       data-page="missions"
       class="nav-btn"
+      type="button"
     >
       🎯
-
-      <span>
-        Misje
-      </span>
+      <span>Misje</span>
     </button>
 
     <button
       data-page="ranking"
       class="nav-btn"
+      type="button"
     >
       🏆
-
-      <span>
-        Ranking
-      </span>
+      <span>Ranking</span>
     </button>
 
     <button
       data-page="rewards"
       class="nav-btn"
+      type="button"
     >
       🎁
-
-      <span>
-        Nagrody
-      </span>
+      <span>Nagrody</span>
     </button>
 
   </nav>
 
-  <script
-    src="/app.js"
-  ></script>
+  <script src="/app.js"></script>
 
 </body>
 </html>
